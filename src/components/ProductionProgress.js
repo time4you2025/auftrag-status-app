@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "../../components/ui/Card";
+import { Checkbox } from "../../components/ui/checkbox";
+import { Progress } from "../../components/ui/progress";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import { X } from "lucide-react";
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
