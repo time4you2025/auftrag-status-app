@@ -10,7 +10,7 @@ export default function App() {
   const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec")
+    fetch("https://script.google.com/macros/s/AKfycbxr5rTt1OnW82hZq0alBuhPnor62tuxFSoTwoeSpbwffaVuRZ5MLNegPv6yQp4IBBLvRQ/exec")
       .then((res) => res.json())
       .then((data) => setHistory(data));
   }, []);
@@ -30,7 +30,7 @@ export default function App() {
 
   const submitData = async () => {
     if (!qrResult) return alert("Bitte zuerst einen QR-Code scannen");
-    const response = await fetch("https://script.google.com/macros/s/YOUR_SCRIPT_ID/exec", {
+    const response = await fetch("https://script.google.com/macros/s/AKfycbxr5rTt1OnW82hZq0alBuhPnor62tuxFSoTwoeSpbwffaVuRZ5MLNegPv6yQp4IBBLvRQ/exec", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ auftrag: qrResult, status }),
