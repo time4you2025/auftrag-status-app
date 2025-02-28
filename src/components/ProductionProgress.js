@@ -3,7 +3,7 @@ import { Checkbox } from "../components/ui/Checkbox";
 import { Card, CardContent } from "../components/ui/Card";
 import { Progress } from "../components/ui/Progress";
 import { Button } from "../components/ui/Button";
-import { Input } from "../components/ui/Input";
+import Input from "../components/ui/Input";
 import { X } from "lucide-react";
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
