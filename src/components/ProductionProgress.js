@@ -45,19 +45,32 @@ export default function ProductionProgress() {
             });
     }, []);
 
-  const addOrder = () => {
-    if (newOrder.trim() !== "" && newWeek.trim() !== "") {
-      setOrders((prev) => [...prev, { id: newOrder, week: parseInt(newWeek, 10), progress: Array(steps.length).fill(false), remark: "" }]);
-      setNewOrder("");
-      setNewWeek("");
-     // An Google Sheets senden
-            await fetch(API_URL, {
-                method: "POST",
-                body: JSON.stringify(newOrderData),
-                headers: { "Content-Type": "application/json" }
-            });
-        }
+ const addOrder = async () => {
+  if (newOrder.trim() !== "" && newWeek.trim() !== "") {
+    const newOrderData = { 
+      id: newOrder, 
+      week: parseInt(newWeek, 10), 
+      progress: Array(steps.length).fill(false), 
+      remark: "" 
     };
+
+    setOrders((prev) => [...prev, newOrderData]);
+    setNewOrder("");
+    setNewWeek("");
+
+    // An Google Sheets senden
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        body: JSON.stringify(newOrderData),
+        headers: { "Content-Type": "application/json" }
+      });
+    } catch (error) {
+      console.error("Fehler beim Speichern in Google Sheets:", error);
+    }
+  }
+};
+
 
   const updateRemark = (orderId, remark) => {
     setOrders((prev) =>
