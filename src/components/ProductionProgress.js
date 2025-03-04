@@ -120,7 +120,7 @@ export default function ProductionProgress() {
                 <label key={index} className="flex items-center gap-1 text-xs">
                   <Checkbox
                     checked={order.progress[index]}
-                    onCheckedChange={() => toggleStep(order.id, index)}
+                    onChange={() => toggleStep(order.id, index)}
                     disabled={index > 0 && !order.progress[index - 1]}
                   />
                   {step}
