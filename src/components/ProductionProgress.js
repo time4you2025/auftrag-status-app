@@ -6,6 +6,7 @@ import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X } from "lucide-react";
 
+const API_URL = "https://script.google.com/macros/s/AKfycbyXSRHiEJoZ4CvF9-QzYUTDhpLzeNqh1jiQJA4-dCE4Knkf1PSexuFpRXdFiatv96siTA/exec"; // Ersetze mit deiner URL
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
 function getCurrentCalendarWeek() {
@@ -26,27 +27,37 @@ function getStatusColor(order) {
 }
 
 export default function ProductionProgress() {
-  const [orders, setOrders] = useState(() => {
-    const savedOrders = localStorage.getItem("orders");
-    return savedOrders ? JSON.parse(savedOrders) : [];
-  });
-  const [newOrder, setNewOrder] = useState("");
-  const [newWeek, setNewWeek] = useState("");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [showPasswordInput, setShowPasswordInput] = useState(null);
+    const [orders, setOrders] = useState([]);
+    const [newOrder, setNewOrder] = useState("");
+    const [newWeek, setNewWeek] = useState("");
 
-  useEffect(() => {
-    localStorage.setItem("orders", JSON.stringify(orders));
-  }, [orders]);
+    useEffect(() => {
+        fetch(API_URL) // Daten aus Google Sheets laden
+            .then(response => response.json())
+            .then(data => {
+                const parsedOrders = data.slice(1).map(row => ({
+                    id: row[0],
+                    week: parseInt(row[1], 10),
+                    progress: row.slice(2, 7).map(val => val === "TRUE"),
+                    remark: row[7] || ""
+                }));
+                setOrders(parsedOrders);
+            });
+    }, []);
 
   const addOrder = () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
       setOrders((prev) => [...prev, { id: newOrder, week: parseInt(newWeek, 10), progress: Array(steps.length).fill(false), remark: "" }]);
       setNewOrder("");
       setNewWeek("");
-    }
-  };
+     // An Google Sheets senden
+            await fetch(API_URL, {
+                method: "POST",
+                body: JSON.stringify(newOrderData),
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+    };
 
   const updateRemark = (orderId, remark) => {
     setOrders((prev) =>
