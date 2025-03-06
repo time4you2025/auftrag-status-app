@@ -6,6 +6,7 @@ import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X } from "lucide-react";
 
+const [searchQuery, setSearchQuery] = useState("");
 const API_URL = "https://script.google.com/macros/s/AKfycbyXSRHiEJoZ4CvF9-QzYUTDhpLzeNqh1jiQJA4-dCE4Knkf1PSexuFpRXdFiatv96siTA/exec"; // Ersetze mit deiner URL
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
