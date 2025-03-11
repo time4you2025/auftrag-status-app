@@ -5,7 +5,8 @@ import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X } from "lucide-react";
-import { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "../firebaseConfig";
+import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firebstoe";
+import { db } from "../firebaseConfig";
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
