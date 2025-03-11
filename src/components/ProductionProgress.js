@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import {Card, CardContent } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import Checkbox from "../components/ui/checkbox";
-import {Progress } from "../components/ui/progress";
+import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X } from "lucide-react";
+import { db, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "../firebaseConfig";
 
-const [searchQuery, setSearchQuery] = useState("");
-const API_URL = "https://script.google.com/macros/s/AKfycbyXSRHiEJoZ4CvF9-QzYUTDhpLzeNqh1jiQJA4-dCE4Knkf1PSexuFpRXdFiatv96siTA/exec"; // Ersetze mit deiner URL
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
 function getCurrentCalendarWeek() {
@@ -28,76 +27,56 @@ function getStatusColor(order) {
 }
 
 export default function ProductionProgress() {
-    const [orders, setOrders] = useState([]);
-    const [newOrder, setNewOrder] = useState("");
-    const [newWeek, setNewWeek] = useState("");
+  const [orders, setOrders] = useState([]);
+  const [newOrder, setNewOrder] = useState("");
+  const [newWeek, setNewWeek] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showPasswordInput, setShowPasswordInput] = useState(null);
 
-    useEffect(() => {
-        fetch(API_URL) // Daten aus Google Sheets laden
-            .then(response => response.json())
-            .then(data => {
-                const parsedOrders = data.slice(1).map(row => ({
-                    id: row[0],
-                    week: parseInt(row[1], 10),
-                    progress: row.slice(2, 7).map(val => val === "TRUE"),
-                    remark: row[7] || ""
-                }));
-                setOrders(parsedOrders);
-            });
-    }, []);
-
- const addOrder = async () => {
-  if (newOrder.trim() !== "" && newWeek.trim() !== "") {
-    const newOrderData = { 
-      id: newOrder, 
-      week: parseInt(newWeek, 10), 
-      progress: Array(steps.length).fill(false), 
-      remark: "" 
-    };
-
-    setOrders((prev) => [...prev, newOrderData]);
-    setNewOrder("");
-    setNewWeek("");
-
-    // An Google Sheets senden
-    try {
-      await fetch(API_URL, {
-        method: "POST",
-        body: JSON.stringify(newOrderData),
-        headers: { "Content-Type": "application/json" }
-      });
-    } catch (error) {
-      console.error("Fehler beim Speichern in Google Sheets:", error);
+  // 🔥 Daten aus Firestore abrufen
+  useEffect(() => {
+    async function fetchOrders() {
+      const snapshot = await getDocs(collection(db, "orders"));
+      const ordersData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setOrders(ordersData);
     }
-  }
-};
+    fetchOrders();
+  }, []);
 
+  // 🔥 Neue Bestellung hinzufügen
+  const addOrder = async () => {
+    if (newOrder.trim() !== "" && newWeek.trim() !== "") {
+      const newOrderData = {
+        id: newOrder,
+        week: parseInt(newWeek, 10),
+        progress: Array(steps.length).fill(false),
+        remark: ""
+      };
 
-  const updateRemark = (orderId, remark) => {
-    setOrders((prev) =>
-      prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
-    );
-  };
-
-  const deleteOrder = (orderId) => {
-    if (deletePassword === "t4y") {
-      setOrders(orders.filter(order => order.id !== orderId));
-      setDeletePassword("");
-      setShowPasswordInput(null);
-    } else {
-      alert("Falsches Passwort!");
+      try {
+        const docRef = await addDoc(collection(db, "orders"), newOrderData);
+        setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
+        setNewOrder("");
+        setNewWeek("");
+      } catch (error) {
+        console.error("Fehler beim Speichern in Firestore:", error);
+      }
     }
   };
 
-  const toggleStep = (orderId, index) => {
+  // 🔥 Status-Schritt aktualisieren
+  const toggleStep = async (orderId, index) => {
     setOrders((prev) =>
       prev.map((order) => {
         if (order.id === orderId) {
           if (index === 0 || order.progress[index - 1]) {
-            return {
-              ...order,
-              progress: order.progress.map((step, i) => (i === index ? !step : step))
-            };
+            const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
+            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+            return { ...order, progress: updatedProgress };
           }
         }
         return order;
@@ -105,6 +84,27 @@ export default function ProductionProgress() {
     );
   };
 
+  // 🔥 Bemerkungen aktualisieren
+  const updateRemark = async (orderId, remark) => {
+    setOrders((prev) =>
+      prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
+    );
+    await updateDoc(doc(db, "orders", orderId), { remark });
+  };
+
+  // 🔥 Auftrag löschen
+  const deleteOrder = async (orderId) => {
+    if (deletePassword === "t4y") {
+      setOrders(orders.filter(order => order.id !== orderId));
+      await deleteDoc(doc(db, "orders", orderId));
+      setDeletePassword("");
+      setShowPasswordInput(null);
+    } else {
+      alert("Falsches Passwort!");
+    }
+  };
+
+  // 🔍 Filter für Suche
   const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
 
   return (
@@ -143,11 +143,7 @@ export default function ProductionProgress() {
             <div className="flex gap-2">
               {steps.map((step, index) => (
                 <label key={index} className="flex items-center gap-1 text-xs">
-                  <Checkbox
-                    checked={order.progress[index]}
-                    onChange={() => toggleStep(order.id, index)}
-                    disabled={index > 0 && !order.progress[index - 1]}
-                  />
+                  <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
                   {step}
                 </label>
               ))}
@@ -164,3 +160,4 @@ export default function ProductionProgress() {
     </div>
   );
 }
+
