@@ -1,19 +1,13 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
 
-// 🔥 Firebase Konfiguration HIER EINTRAGEN (ersetze mit deinen eigenen Firebase-Daten)
 const firebaseConfig = {
-  apiKey: "AIzaSyDoUdRr-C9S5hF3-MarKNGnJrr2p_XkQrk",
-  authDomain: "time4you-3a43a.firebaseapp.com",
-  projectId: "time4you-3a43a",
-  storageBucket: "time4you-3a43a.firebasestorage.app",
-  messagingSenderId: "691415936917",
-  appId: "1:691415936917:web:97950e8ef1deb33a35d09c"
-
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
-// 🔥 Firebase initialisieren
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-export { db };
+export default app;
