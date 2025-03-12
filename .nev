@@ -1,0 +1,6 @@
+VITE_FIREBASE_API_KEY=dein_api_key
+VITE_FIREBASE_AUTH_DOMAIN=dein_auth_domain
+VITE_FIREBASE_PROJECT_ID=dein_project_id
+VITE_FIREBASE_STORAGE_BUCKET=dein_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=dein_messaging_sender_id
+VITE_FIREBASE_APP_ID=dein_app_id
