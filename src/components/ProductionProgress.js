@@ -37,15 +37,19 @@ export default function ProductionProgress() {
 
   // 🔥 Daten aus Firestore abrufen und nach Auftragsnummer sortieren
   const fetchOrders = async () => {
-    const snapshot = await getDocs(collection(db, "orders"));
-    const ordersData = snapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    try {
+      const snapshot = await getDocs(collection(db, "orders"));
+      const ordersData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-    // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
-    const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
-    setOrders(sortedOrders);
+      // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
+      const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
+      setOrders(sortedOrders);
+    } catch (error) {
+      console.error("Fehler beim Abrufen der Daten:", error);
+    }
   };
 
   useEffect(() => {
@@ -78,40 +82,64 @@ export default function ProductionProgress() {
 
   // 🔥 Status-Schritt aktualisieren
   const toggleStep = async (orderId, index) => {
-    setOrders((prev) =>
-      prev.map((order) => {
-        if (order.id === orderId) {
-          if (index === 0 || order.progress[index - 1]) {
-            const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
-            
-            // Firestore aktualisieren
-            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+    try {
+      setOrders((prev) =>
+        prev.map((order) => {
+          if (order.id === orderId) {
+            if (index === 0 || order.progress[index - 1]) {
+              const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
 
-            return { ...order, progress: updatedProgress };
+              // Firestore aktualisieren
+              updateDoc(doc(db, "orders", orderId), { progress: updatedProgress })
+                .then(() => {
+                  console.log("Fortschritt erfolgreich aktualisiert");
+                })
+                .catch((error) => {
+                  console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+                });
+
+              return { ...order, progress: updatedProgress };
+            }
           }
-        }
-        return order;
-      })
-    );
+          return order;
+        })
+      );
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Status:", error);
+    }
   };
 
   // 🔥 Bemerkungen aktualisieren
   const updateRemark = async (orderId, remark) => {
-    setOrders((prev) =>
-      prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
-    );
+    try {
+      setOrders((prev) =>
+        prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
+      );
 
-    // Firestore aktualisieren
-    await updateDoc(doc(db, "orders", orderId), { remark });
+      // Firestore aktualisieren
+      await updateDoc(doc(db, "orders", orderId), { remark })
+        .then(() => {
+          console.log("Bemerkung erfolgreich aktualisiert");
+        })
+        .catch((error) => {
+          console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+        });
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+    }
   };
 
   // 🔥 Auftrag löschen
   const deleteOrder = async (orderId) => {
     if (deletePassword === "t4y") {
-      setOrders(orders.filter(order => order.id !== orderId));
-      await deleteDoc(doc(db, "orders", orderId));
-      setDeletePassword("");
-      setShowPasswordInput(null);
+      try {
+        setOrders(orders.filter(order => order.id !== orderId));
+        await deleteDoc(doc(db, "orders", orderId));
+        setDeletePassword("");
+        setShowPasswordInput(null);
+      } catch (error) {
+        console.error("Fehler beim Löschen des Auftrags:", error);
+      }
     } else {
       alert("Falsches Passwort!");
     }
@@ -173,4 +201,3 @@ export default function ProductionProgress() {
     </div>
   );
 }
-
