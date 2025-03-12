@@ -36,18 +36,19 @@ export default function ProductionProgress() {
   const [showPasswordInput, setShowPasswordInput] = useState(null);
 
   // 🔥 Daten aus Firestore abrufen und nach Auftragsnummer sortieren
-  useEffect(() => {
-    async function fetchOrders() {
-      const snapshot = await getDocs(collection(db, "orders"));
-      const ordersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
+  const fetchOrders = async () => {
+    const snapshot = await getDocs(collection(db, "orders"));
+    const ordersData = snapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
 
-      // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
-      const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
-      setOrders(sortedOrders);
-    }
+    // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
+    const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
+    setOrders(sortedOrders);
+  };
+
+  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -62,11 +63,11 @@ export default function ProductionProgress() {
       };
 
       try {
-        // Hinzufügen der neuen Bestellung
+        // Neue Bestellung in Firestore hinzufügen
         await addDoc(collection(db, "orders"), newOrderData);
         
-        // Nach dem Hinzufügen die Bestellungen neu abrufen und sortieren
-        fetchOrders(); // Aufträge neu laden und sortieren
+        // Nach dem Hinzufügen die Bestellungen neu laden und sortieren
+        fetchOrders();
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
@@ -167,4 +168,3 @@ export default function ProductionProgress() {
     </div>
   );
 }
-
