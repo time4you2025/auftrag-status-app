@@ -2,24 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
-import { auth, db } from "./firebaseConfig";
-import "firebase/auth";
-import "firebase/firestore";
-
-const firebaseConfig = {
-  apiKey: "your-api-key",
-  authDomain: "your-auth-domain",
-  projectId: "your-project-id",
-  storageBucket: "your-storage-bucket",
-  messagingSenderId: "your-sender-id",
-  appId: "your-app-id",
-};
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-} else {
-  firebase.app();
-}
+import { app, auth, db } from "./firebaseConfig"; // Importiere Firebase korrekt
 
 ReactDOM.render(
   <React.StrictMode>
@@ -27,3 +10,8 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById("root")
 );
+
+// Teste, ob Firebase erfolgreich initialisiert wurde
+console.log("Firebase App:", app);
+console.log("Firebase Auth:", auth);
+console.log("Firebase Firestore:", db);
