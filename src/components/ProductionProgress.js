@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card } from "../components/ui/card";
 import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
@@ -83,7 +83,10 @@ export default function ProductionProgress() {
         if (order.id === orderId) {
           if (index === 0 || order.progress[index - 1]) {
             const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
+            
+            // Firestore aktualisieren
             updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+
             return { ...order, progress: updatedProgress };
           }
         }
@@ -97,6 +100,8 @@ export default function ProductionProgress() {
     setOrders((prev) =>
       prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
     );
+
+    // Firestore aktualisieren
     await updateDoc(doc(db, "orders", orderId), { remark });
   };
 
@@ -168,3 +173,4 @@ export default function ProductionProgress() {
     </div>
   );
 }
+
