@@ -12,6 +12,6 @@ ReactDOM.render(
 );
 
 // Teste, ob Firebase erfolgreich initialisiert wurde
-console.log("Firebase App:", app);
-console.log("Firebase Auth:", auth);
-console.log("Firebase Firestore:", db);
+console.log("✅ Firebase App:", app);
+console.log("✅ Firebase Auth:", auth);
+console.log("✅ Firebase Firestore:", db);
