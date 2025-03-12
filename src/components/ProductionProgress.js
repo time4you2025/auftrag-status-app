@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
@@ -35,26 +35,16 @@ export default function ProductionProgress() {
   const [deletePassword, setDeletePassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(null);
 
-  const [pendingChanges, setPendingChanges] = useState({});
-
-  // 🔥 Daten aus Firestore abrufen und nach Auftragsnummer sortieren
-  const fetchOrders = async () => {
-    try {
+  // 🔥 Daten aus Firestore abrufen
+  useEffect(() => {
+    async function fetchOrders() {
       const snapshot = await getDocs(collection(db, "orders"));
       const ordersData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
-
-      // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
-      const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
-      setOrders(sortedOrders);
-    } catch (error) {
-      console.error("Fehler beim Abrufen der Daten:", error);
+      setOrders(ordersData);
     }
-  };
-
-  useEffect(() => {
     fetchOrders();
   }, []);
 
@@ -69,11 +59,8 @@ export default function ProductionProgress() {
       };
 
       try {
-        // Neue Bestellung in Firestore hinzufügen
-        await addDoc(collection(db, "orders"), newOrderData);
-        
-        // Nach dem Hinzufügen die Bestellungen neu laden und sortieren
-        fetchOrders();
+        const docRef = await addDoc(collection(db, "orders"), newOrderData);
+        setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
@@ -84,62 +71,35 @@ export default function ProductionProgress() {
 
   // 🔥 Status-Schritt aktualisieren
   const toggleStep = async (orderId, index) => {
-    setPendingChanges((prev) => ({
-      ...prev,
-      [orderId]: {
-        ...prev[orderId],
-        progress: prev[orderId]?.progress?.map((step, i) =>
-          i === index ? !step : step
-        ) || Array(steps.length).fill(false)
-      }
-    }));
+    setOrders((prev) =>
+      prev.map((order) => {
+        if (order.id === orderId) {
+          if (index === 0 || order.progress[index - 1]) {
+            const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
+            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+            return { ...order, progress: updatedProgress };
+          }
+        }
+        return order;
+      })
+    );
   };
 
   // 🔥 Bemerkungen aktualisieren
-  const updateRemark = (orderId, remark) => {
-    setPendingChanges((prev) => ({
-      ...prev,
-      [orderId]: {
-        ...prev[orderId],
-        remark: remark
-      }
-    }));
-  };
-
-  // 🔥 Speichern der Änderungen
-  const saveChanges = async (orderId) => {
-    const changes = pendingChanges[orderId];
-    if (changes) {
-      try {
-        await updateDoc(doc(db, "orders", orderId), changes);
-        console.log("Änderungen gespeichert:", changes);
-
-        // Änderungen nach dem Speichern zurücksetzen
-        setPendingChanges((prev) => {
-          const newPendingChanges = { ...prev };
-          delete newPendingChanges[orderId];
-          return newPendingChanges;
-        });
-
-        // Bestellungen neu laden, um die aktuellen Daten zu reflektieren
-        fetchOrders();
-      } catch (error) {
-        console.error("Fehler beim Speichern der Änderungen:", error);
-      }
-    }
+  const updateRemark = async (orderId, remark) => {
+    setOrders((prev) =>
+      prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
+    );
+    await updateDoc(doc(db, "orders", orderId), { remark });
   };
 
   // 🔥 Auftrag löschen
   const deleteOrder = async (orderId) => {
     if (deletePassword === "t4y") {
-      try {
-        setOrders(orders.filter(order => order.id !== orderId));
-        await deleteDoc(doc(db, "orders", orderId));
-        setDeletePassword("");
-        setShowPasswordInput(null);
-      } catch (error) {
-        console.error("Fehler beim Löschen des Auftrags:", error);
-      }
+      setOrders(orders.filter(order => order.id !== orderId));
+      await deleteDoc(doc(db, "orders", orderId));
+      setDeletePassword("");
+      setShowPasswordInput(null);
     } else {
       alert("Falsches Passwort!");
     }
@@ -162,8 +122,6 @@ export default function ProductionProgress() {
       </div>
       {filteredOrders.map((order) => {
         const completedSteps = order.progress.filter(Boolean).length;
-        const pendingChange = pendingChanges[order.id];
-
         return (
           <Card key={order.id} className="p-2 relative">
             <div className="absolute top-1 right-1">
@@ -186,21 +144,17 @@ export default function ProductionProgress() {
             <div className="flex gap-2">
               {steps.map((step, index) => (
                 <label key={index} className="flex items-center gap-1 text-xs">
-                  <Checkbox
-                    checked={pendingChange ? pendingChange.progress[index] : order.progress[index]}
-                    onChange={() => toggleStep(order.id, index)}
-                  />
+                  <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
                   {step}
                 </label>
               ))}
             </div>
             <Input
-              value={pendingChange ? pendingChange.remark : order.remark}
+              value={order.remark}
               onChange={(e) => updateRemark(order.id, e.target.value)}
               placeholder="Bemerkungen hinzufügen"
               className="mt-2 text-xs"
             />
-            <Button onClick={() => saveChanges(order.id)} className="mt-2">Speichern</Button>
           </Card>
         );
       })}
