@@ -35,7 +35,7 @@ export default function ProductionProgress() {
   const [deletePassword, setDeletePassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(null);
 
-  // 🔥 Daten aus Firestore abrufen
+  // 🔥 Daten aus Firestore abrufen und nach Auftragsnummer sortieren
   useEffect(() => {
     async function fetchOrders() {
       const snapshot = await getDocs(collection(db, "orders"));
@@ -43,7 +43,10 @@ export default function ProductionProgress() {
         id: doc.id,
         ...doc.data()
       }));
-      setOrders(ordersData);
+
+      // Sortiere die Aufträge nach Auftragsnummer (id) in aufsteigender Reihenfolge
+      const sortedOrders = ordersData.sort((a, b) => a.id.localeCompare(b.id));
+      setOrders(sortedOrders);
     }
     fetchOrders();
   }, []);
@@ -62,8 +65,8 @@ export default function ProductionProgress() {
         // Hinzufügen der neuen Bestellung
         await addDoc(collection(db, "orders"), newOrderData);
         
-        // Nach dem Hinzufügen die Bestellungen neu abrufen
-        fetchOrders(); // Aufträge neu laden
+        // Nach dem Hinzufügen die Bestellungen neu abrufen und sortieren
+        fetchOrders(); // Aufträge neu laden und sortieren
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
@@ -164,5 +167,4 @@ export default function ProductionProgress() {
     </div>
   );
 }
-
 
