@@ -77,7 +77,7 @@ export default function ProductionProgress() {
           if (index === 0 || order.progress[index - 1]) {
             const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
             updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
-            return { ...order, progress: updatedProgress };
+            return { ...order, progress: updatedProgress }; // Lokalen Zustand aktualisieren
           }
         }
         return order;
@@ -90,7 +90,7 @@ export default function ProductionProgress() {
     setOrders((prev) =>
       prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
     );
-    await updateDoc(doc(db, "orders", orderId), { remark });
+    await updateDoc(doc(db, "orders", orderId), { remark }); // Firebase aktualisieren
   };
 
   // 🔥 Auftrag löschen
@@ -160,4 +160,6 @@ export default function ProductionProgress() {
       })}
     </div>
   );
+}
+
 }
