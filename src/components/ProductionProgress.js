@@ -59,8 +59,11 @@ export default function ProductionProgress() {
       };
 
       try {
-        const docRef = await addDoc(collection(db, "orders"), newOrderData);
-        setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
+        // Hinzufügen der neuen Bestellung
+        await addDoc(collection(db, "orders"), newOrderData);
+        
+        // Nach dem Hinzufügen die Bestellungen neu abrufen
+        fetchOrders(); // Aufträge neu laden
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
@@ -161,4 +164,5 @@ export default function ProductionProgress() {
     </div>
   );
 }
+
 
