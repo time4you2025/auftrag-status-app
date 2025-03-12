@@ -35,6 +35,8 @@ export default function ProductionProgress() {
   const [deletePassword, setDeletePassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(null);
 
+  const [pendingChanges, setPendingChanges] = useState({});
+
   // 🔥 Daten aus Firestore abrufen und nach Auftragsnummer sortieren
   const fetchOrders = async () => {
     try {
@@ -82,50 +84,48 @@ export default function ProductionProgress() {
 
   // 🔥 Status-Schritt aktualisieren
   const toggleStep = async (orderId, index) => {
-    try {
-      setOrders((prev) =>
-        prev.map((order) => {
-          if (order.id === orderId) {
-            if (index === 0 || order.progress[index - 1]) {
-              const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
-
-              // Firestore aktualisieren
-              updateDoc(doc(db, "orders", orderId), { progress: updatedProgress })
-                .then(() => {
-                  console.log("Fortschritt erfolgreich aktualisiert");
-                })
-                .catch((error) => {
-                  console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-                });
-
-              return { ...order, progress: updatedProgress };
-            }
-          }
-          return order;
-        })
-      );
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Status:", error);
-    }
+    setPendingChanges((prev) => ({
+      ...prev,
+      [orderId]: {
+        ...prev[orderId],
+        progress: prev[orderId]?.progress?.map((step, i) =>
+          i === index ? !step : step
+        ) || Array(steps.length).fill(false)
+      }
+    }));
   };
 
   // 🔥 Bemerkungen aktualisieren
-  const updateRemark = async (orderId, remark) => {
-    try {
-      setOrders((prev) =>
-        prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
-      );
+  const updateRemark = (orderId, remark) => {
+    setPendingChanges((prev) => ({
+      ...prev,
+      [orderId]: {
+        ...prev[orderId],
+        remark: remark
+      }
+    }));
+  };
 
-      // Firestore aktualisieren
-      await updateDoc(doc(db, "orders", orderId), { remark })
-        .then(() => {
-          console.log("Bemerkung erfolgreich aktualisiert");
-        })
-        .catch((error) => {
-          console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+  // 🔥 Speichern der Änderungen
+  const saveChanges = async (orderId) => {
+    const changes = pendingChanges[orderId];
+    if (changes) {
+      try {
+        await updateDoc(doc(db, "orders", orderId), changes);
+        console.log("Änderungen gespeichert:", changes);
+
+        // Änderungen nach dem Speichern zurücksetzen
+        setPendingChanges((prev) => {
+          const newPendingChanges = { ...prev };
+          delete newPendingChanges[orderId];
+          return newPendingChanges;
         });
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+
+        // Bestellungen neu laden, um die aktuellen Daten zu reflektieren
+        fetchOrders();
+      } catch (error) {
+        console.error("Fehler beim Speichern der Änderungen:", error);
+      }
     }
   };
 
@@ -162,6 +162,8 @@ export default function ProductionProgress() {
       </div>
       {filteredOrders.map((order) => {
         const completedSteps = order.progress.filter(Boolean).length;
+        const pendingChange = pendingChanges[order.id];
+
         return (
           <Card key={order.id} className="p-2 relative">
             <div className="absolute top-1 right-1">
@@ -184,17 +186,21 @@ export default function ProductionProgress() {
             <div className="flex gap-2">
               {steps.map((step, index) => (
                 <label key={index} className="flex items-center gap-1 text-xs">
-                  <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
+                  <Checkbox
+                    checked={pendingChange ? pendingChange.progress[index] : order.progress[index]}
+                    onChange={() => toggleStep(order.id, index)}
+                  />
                   {step}
                 </label>
               ))}
             </div>
             <Input
-              value={order.remark}
+              value={pendingChange ? pendingChange.remark : order.remark}
               onChange={(e) => updateRemark(order.id, e.target.value)}
               placeholder="Bemerkungen hinzufügen"
               className="mt-2 text-xs"
             />
+            <Button onClick={() => saveChanges(order.id)} className="mt-2">Speichern</Button>
           </Card>
         );
       })}
