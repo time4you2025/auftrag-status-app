@@ -2,8 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom";
 import "./index.css";
 import App from "./App";
-
-import firebase from "firebase/app";
+import { auth, db } from "./firebaseConfig";
 import "firebase/auth";
 import "firebase/firestore";
 
