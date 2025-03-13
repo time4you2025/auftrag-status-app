@@ -1,35 +1,29 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../components/ui/card";
-import Checkbox from "../components/ui/checkbox";
-import Input from "../components/ui/input";
-import Button from "../components/ui/button";
-import { X } from "lucide-react";
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc, doc, deleteDoc } from "firebase/firestore"; 
 import { db } from "../firebaseConfig";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 
-const steps = [
-  "AB erhalten",
-  "In Produktion",
-  "Qualitätskontrolle",
-  "Fertig produziert",
-  "Fakturiert",
-];
+const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
-function getCurrentCalendarWeek() {
+const getCurrentCalendarWeek = () => {
   const now = new Date();
   const firstDayOfYear = new Date(now.getFullYear(), 0, 1);
-  const pastDaysOfYear = (now - firstDayOfYear) / 86400000;
-  return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-}
+  const pastDaysOfYear = (now - new Date(now.getFullYear(), 0, 1)) / 86400000;
+  return Math.ceil((past the dayOfYear + firstDayOfYear.getDay() + 1) / 7);
+};
 
-function getStatusColor(order) {
+const getStatusColor = (order) => {
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
-  if (order.progress.every((step) => step)) return "bg-green-500";
   if (diff < -1) return "bg-green-500";
-  if (diff === -1) return "bg-yellow-500";
+  if (diff === 0 || diff === -1) return "bg-green-500";
   return "bg-red-500";
-}
+};
 
 export default function ProductionProgress() {
   const [orders, setOrders] = useState([]);
@@ -39,105 +33,112 @@ export default function ProductionProgress() {
   const [deletePassword, setDeletePassword] = useState("");
   const [showPasswordInput, setShowPasswordInput] = useState(null);
 
-  // Fetch orders from Firestore
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const querySnapshot = await getDocs(collection(db, "orders"));
-        const ordersData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const snapshot = await getDocs(collection(db, "orders"));
+        const ordersList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setOrders(ordersData);
       } catch (error) {
-        console.error("Fehler beim Laden der Aufträge:", error);
+        console.error("Fehler beim Abrufen der Bestellungen:", error);
       }
     };
     fetchOrders();
   }, []);
 
-  // Auftrag hinzufügen
-  const addOrderHandler = async () => {
+  const addOrder = async () => {
     if (!newOrder || !newWeek) return;
 
-    try {
-      const docRef = await addDoc(collection(db, "orders"), {
-        id: newOrder,
-        week: parseInt(newWeek, 10),
-        progress: Array(steps.length).fill(false),
-        remark: ""
-      });
+    const newOrderData = {
+      id: newOrder,
+      week: Number(newWeek),
+      progress: new Array(steps.length).fill(false),
+      remark: ""
+    };
 
-      setOrders(prev => [...prev, { id: docRef.id, week: parseInt(newWeek, 10), progress: Array(steps.length).fill(false) }]);
+    try {
+      const docRef = await addDoc(collection(db, "orders"), newOrderData);
+      setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
       setNewOrder("");
       setNewWeek("");
+    } catch (error) {
+      console.error("Fehler beim Hinzufügen der Bestellung:", error);
+    }
   };
 
-  // Status-Schritt aktualisieren
   const toggleStep = async (orderId, index) => {
     try {
-      setOrders((prev) =>
-        prev.map(order => {
-          if (order.id === orderId) {
-            const updatedProgress = order.progress.map((step, i) => i === index ? !step : step);
-            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
-            return { ...order, progress: updatedProgress };
-          })
-      );
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Schrittes:", error);
-    }
+      const updatedOrders = orders.map(order => {
+        if (order.id === orderId) {
+          const newProgress = [...order.progress];
+          if (index === 0 || newProgress[index - 1]) {
+            newProgress[index] = !newProgress[index];
+            const orderRef = doc(db, "orders", orderId);
+            updateDoc(orderRef, { progress: newProgress })
+              .then(() => console.log("Status aktualisiert!"))
+              .catch(error => console.error("Fehler beim Aktualisieren des Status:", error));
+          }
+          return { ...order, progress: newProgress };
+        }
+        return order;
+      })
+    );
   };
 
-  // Auftrag löschen
   const deleteOrder = async (orderId) => {
-    if (deletePassword !== "secret") return;
+    if (deletePassword !== "t4y") return;
+
     try {
       await deleteDoc(doc(db, "orders", orderId));
-      setOrders((prev) => prev.filter(order => order.id !== orderId));
-      setDeletePassword("");
-      setShowPasswordInput(null);
+      setOrders(orders.filter(order => order.id !== orderId));
     } catch (error) {
-      console.error("Fehler beim Löschen des Auftrags:", error);
+      console.error("Fehler beim Löschen der Bestellung:", error);
     }
   };
 
+  const updateRemark = async (orderId, remark) => {
+    try {
+      await updateDoc(doc(db, "orders", orderId), { remark });
+      setOrders((prev) =>
+        prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
+      );
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+    }
+  };
+
+  const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
+
   return (
-    <div className="p-4 grid gap-4" style={{ backgroundColor: "#009933", minHeight: "100vh" }}>
-      <h2 className="text-lg font-bold text-white">Kalenderwoche: KW {getCurrentCalendarWeek()}</h2>
+    <div className="p-4 grid gap-4">
+      <h1 className="text-2xl font-bold">TIME4YOU - Produktionsstatus</h1>
       <div className="flex gap-2">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" />
-        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="KW" />
-        <Button onClick={addOrderHandler}>Hinzufügen</Button>
+        <Input type="number" value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" />
+        <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Suche Auftrag" />
-      {orders.filter(order => order.id.includes(searchQuery)).map((order) => (
-        <Card key={order.id} className="p-2 relative">
-          <div className="absolute top-1 right-1">
-            {showPasswordInput === order.id ? (
-              <div className="flex gap-1">
-                <Input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="Passwort" className="w-20 text-xs" />
-                <Button onClick={() => deleteOrder(order.id)} className="text-xs px-1">✔</Button>
-              </div>
-            ) : (
-              <Button onClick={() => setShowPasswordInput(order.id)} variant="ghost" size="icon" className="text-xs p-1">
-                <X size={12} />
-              </Button>
-            )}
+      <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Suche Auftragsnummer" />
+      {filteredOrders.map(order => (
+        <Card key={order.id}>
+          <div className="flex justify-between">
+            <span>{order.id} - KW {order.week} {order.progress.every(Boolean) && "✅ Erledigt"}</span>
+            <button onClick={() => deleteOrder(order.id)}><X /></button>
           </div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className={`w-3 h-3 rounded-full ${getStatusColor(order)}`} />
-            <h2 className="text-sm font-bold">{order.id} (KW {order.week}) {order.progress.every(step => step) ? "✅ Erledigt" : ""}</h2>
-          </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} className="mb-2" />
-          <div className="flex gap-2">
-            {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
+          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
+          {steps.map((step, index) => (
+            <label key={index}>
+              <input
+                type="checkbox"
+                checked={order.progress[index]}
+                onChange={() => toggleStep(order.id, index)}
+              />
+              {step}
+            </label>
+          ))}
+          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkungen hinzufügen" />
         </Card>
-      ))}
-    </div>
+      );
+    })}
+  </div>
   );
 }
-
