@@ -38,12 +38,16 @@ export default function ProductionProgress() {
   // 🔥 Daten aus Firestore abrufen
   useEffect(() => {
     async function fetchOrders() {
-      const snapshot = await getDocs(collection(db, "orders"));
-      const ordersData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setOrders(ordersData);
+      try {
+        const snapshot = await getDocs(collection(db, "orders"));
+        const ordersData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setOrders(ordersData);
+      } catch (error) {
+        console.error("Fehler beim Abrufen der Daten:", error);
+      }
     }
     fetchOrders();
   }, []);
@@ -66,6 +70,8 @@ export default function ProductionProgress() {
       } catch (error) {
         console.error("Fehler beim Speichern in Firestore:", error);
       }
+    } else {
+      alert("Bitte alle Felder ausfüllen.");
     }
   };
 
@@ -76,7 +82,13 @@ export default function ProductionProgress() {
         if (order.id === orderId) {
           if (index === 0 || order.progress[index - 1]) {
             const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
-            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+            updateDoc(doc(db, "orders", orderId), { progress: updatedProgress })
+              .then(() => {
+                console.log("Status erfolgreich aktualisiert");
+              })
+              .catch((error) => {
+                console.error("Fehler beim Aktualisieren des Status:", error);
+              });
             return { ...order, progress: updatedProgress }; // Lokalen Zustand aktualisieren
           }
         }
@@ -90,16 +102,26 @@ export default function ProductionProgress() {
     setOrders((prev) =>
       prev.map((order) => (order.id === orderId ? { ...order, remark } : order))
     );
-    await updateDoc(doc(db, "orders", orderId), { remark }); // Firebase aktualisieren
+    try {
+      await updateDoc(doc(db, "orders", orderId), { remark });
+      console.log("Bemerkung erfolgreich aktualisiert");
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren der Bemerkung:", error);
+    }
   };
 
   // 🔥 Auftrag löschen
   const deleteOrder = async (orderId) => {
     if (deletePassword === "t4y") {
-      setOrders(orders.filter(order => order.id !== orderId));
-      await deleteDoc(doc(db, "orders", orderId));
-      setDeletePassword("");
-      setShowPasswordInput(null);
+      try {
+        setOrders(orders.filter(order => order.id !== orderId));
+        await deleteDoc(doc(db, "orders", orderId));
+        setDeletePassword("");
+        setShowPasswordInput(null);
+        console.log("Auftrag erfolgreich gelöscht");
+      } catch (error) {
+        console.error("Fehler beim Löschen des Auftrags:", error);
+      }
     } else {
       alert("Falsches Passwort!");
     }
