@@ -4,9 +4,10 @@ import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
-import { X, CheckCircle } from "lucide-react"; // Haken-Icon importieren
+import { X, CheckCircle } from "lucide-react";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import QrReader from "react-qr-reader"; // Importiere den QR-Reader
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
@@ -18,14 +19,14 @@ function getCurrentCalendarWeek() {
 }
 
 function getStatusColor(order) {
-  if (order.progress.every(step => step)) return "bg-green-500"; // Alle Schritte abgeschlossen: grün
+  if (order.progress.every(step => step)) return "bg-green-500";
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
 
-  if (diff < -1) return "bg-green-500"; // Mehr als eine Woche im Voraus: grün
-  if (diff === -1) return "bg-yellow-500"; // Eine Woche im Voraus: gelb
-  if (diff === 0) return "bg-orange-500"; // Diese Woche: orange
-  return "bg-red-500"; // Zu spät: rot
+  if (diff < -1) return "bg-green-500";
+  if (diff === -1) return "bg-yellow-500";
+  if (diff === 0) return "bg-orange-500";
+  return "bg-red-500";
 }
 
 export default function ProductionProgress() {
@@ -36,6 +37,7 @@ export default function ProductionProgress() {
   const [password, setPassword] = useState("");
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
+  const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
 
   useEffect(() => {
     async function fetchOrders() {
@@ -49,6 +51,24 @@ export default function ProductionProgress() {
     }
     fetchOrders();
   }, []);
+
+  const handleScan = async (data) => {
+    if (data) {
+      const orderId = data; // Angenommen, der QR-Code enthält die Auftrags-ID
+      const orderDoc = doc(db, "orders", orderId);
+      const orderSnapshot = await getDoc(orderDoc);
+
+      if (orderSnapshot.exists()) {
+        setScannedOrder({ id: orderSnapshot.id, ...orderSnapshot.data() });
+      } else {
+        console.log("Auftrag nicht gefunden");
+      }
+    }
+  };
+
+  const handleError = (err) => {
+    console.error("Fehler beim Scannen des QR-Codes:", err);
+  };
 
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
@@ -98,7 +118,7 @@ export default function ProductionProgress() {
   };
 
   const deleteOrder = async () => {
-    if (password === "t4y") { // Hier das tatsächliche Passwort einsetzen
+    if (password === "t4y") {
       try {
         await deleteDoc(doc(db, "orders", orderToDelete.id));
         setOrders(prevOrders => prevOrders.filter(order => order.id !== orderToDelete.id));
@@ -131,12 +151,33 @@ export default function ProductionProgress() {
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
+      
+      {/* QR Code Scanner */}
+      <div className="my-4">
+        <QrReader delay={300} onScan={handleScan} onError={handleError} style={{ width: "100%" }} />
+      </div>
+
+      {/* Anzeige des gescannten Auftrags */}
+      {scannedOrder && (
+        <Card className="p-2 mt-4">
+          <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
+          <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {steps.map((step, index) => (
+              <label key={index} className="flex items-center gap-1 text-xs">
+                <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
+                {step}
+              </label>
+            ))}
+          </div>
+          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+        </Card>
+      )}
 
       {SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 relative">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
-            {/* Wenn alle Schritte abgeschlossen sind, einen grünen Haken anzeigen */}
             {order.progress.every(step => step) ? (
               <CheckCircle size={20} className="text-green-500" />
             ) : (
