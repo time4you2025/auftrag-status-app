@@ -5,7 +5,7 @@ export function Card({ children, className, statusColor }) {
     <div className={`bg-white rounded-lg shadow-md p-4 ${className} relative`}>
       {/* Status Punkt */}
       <div
-        className={`w-4 h-4 rounded-full absolute top-2 right-2 ${statusColor} z-10`}
+        className={`w-4 h-4 rounded-full absolute top-2 left-2 ${statusColor} z-10`}
       ></div>
       {children}
     </div>
