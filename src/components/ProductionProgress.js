@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card } from "../components/ui/card";
 import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
-import { X } from "lucide-react";
-import { collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../firebaseConfig";
+import { db } from "../firebaseConfig"; // Import für Firebase Firestore
+import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore"; // Import der Firebase-Funktionen im modularen Ansatz
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
@@ -47,7 +46,7 @@ export default function ProductionProgress() {
 
       try {
         const docRef = doc(db, "orders", newOrderData.id);
-        await setDoc(docRef, newOrderData);
+        await setDoc(docRef, newOrderData); // Hier wird setDoc verwendet
         setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
         setNewOrder("");
         setNewWeek("");
