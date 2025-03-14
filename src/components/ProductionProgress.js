@@ -18,6 +18,7 @@ function getCurrentCalendarWeek() {
 }
 
 function getStatusColor(order) {
+  console.log(`Order: ${order.id}, Week: ${order.week}, Diff: ${getCurrentCalendarWeek() - order.week}`);
   if (order.progress.every(step => step)) return "bg-green-500"; // Alle Schritte abgeschlossen: grün
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
