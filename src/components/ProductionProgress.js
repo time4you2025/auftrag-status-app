@@ -39,10 +39,7 @@ export default function ProductionProgress() {
     async function fetchOrders() {
       try {
         const snapshot = await getDocs(collection(db, "orders"));
-        const ordersData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
+        const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setOrders(ordersData);
       } catch (error) {
         console.error("Fehler beim Abrufen der Daten:", error);
@@ -54,7 +51,6 @@ export default function ProductionProgress() {
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
       const newOrderData = {
-        id: newOrder,
         week: parseInt(newWeek, 10),
         progress: Array(steps.length).fill(false),
         remark: ""
@@ -125,26 +121,16 @@ export default function ProductionProgress() {
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
       {filteredOrders.map((order) => (
         <Card key={order.id} className="p-2 relative">
-          <div className="absolute top-1 right-1">
-            {showPasswordInput === order.id ? (
-              <div className="flex gap-1">
-                <Input type="password" value={deletePassword} onChange={(e) => setDeletePassword(e.target.value)} placeholder="Passwort" className="w-20 text-xs" />
-                <Button onClick={() => deleteOrder(order.id)} className="text-xs px-1">✔</Button>
-              </div>
-            ) : (
-              <Button onClick={() => setShowPasswordInput(order.id)} variant="ghost" size="icon" className="text-xs p-1">
-                <X size={12} />
-              </Button>
-            )}
-          </div>
           <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
-          {steps.map((step, index) => (
-            <label key={index} className="flex items-center gap-1 text-xs">
-              <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
-              {step}
-            </label>
-          ))}
+          <div className="flex flex-wrap gap-2 mt-2">
+            {steps.map((step, index) => (
+              <label key={index} className="flex items-center gap-1 text-xs">
+                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
+                {step}
+              </label>
+            ))}
+          </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
         </Card>
       ))}
