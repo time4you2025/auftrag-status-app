@@ -125,12 +125,12 @@ export default function ProductionProgress() {
     <div className="p-4 grid gap-2 bg-green-600 min-h-screen">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
-      <div className="flex gap-1 mb-2">
+      <div className="flex flex-wrap gap-1 mb-2 w-fit">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" />
         <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" />
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
+      <Input className="w-fit" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
 
       {SORTED_ORDERS.map((order) => (
         <Card key={order.id} className={`p-2 relative ${getStatusColor(order)}`}>
@@ -145,7 +145,7 @@ export default function ProductionProgress() {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute top-2 right-2">
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2">
             <X size={16} />
           </Button>
         </Card>
