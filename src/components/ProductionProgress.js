@@ -4,7 +4,7 @@ import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
-import { X } from "lucide-react";
+import { X, CheckCircle } from "lucide-react"; // Haken-Icon importieren
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
@@ -136,8 +136,12 @@ export default function ProductionProgress() {
         <Card key={order.id} className="p-2 relative">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
-            {/* Farbiges Punkt für den Status */}
-            <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
+            {/* Wenn alle Schritte abgeschlossen sind, einen grünen Haken anzeigen */}
+            {order.progress.every(step => step) ? (
+              <CheckCircle size={20} className="text-green-500" />
+            ) : (
+              <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
+            )}
           </div>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
           <div className="flex flex-wrap gap-2 mt-2">
@@ -149,7 +153,7 @@ export default function ProductionProgress() {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute top-2 right-2">
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2">
             <X size={16} />
           </Button>
         </Card>
