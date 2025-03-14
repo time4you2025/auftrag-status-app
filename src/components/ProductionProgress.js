@@ -5,7 +5,7 @@ import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X } from "lucide-react";
-import { collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
@@ -33,6 +33,9 @@ export default function ProductionProgress() {
   const [newOrder, setNewOrder] = useState("");
   const [newWeek, setNewWeek] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [orderToDelete, setOrderToDelete] = useState(null);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -94,6 +97,27 @@ export default function ProductionProgress() {
     }
   };
 
+  const deleteOrder = async () => {
+    if (password === "DeinPasswort123") { // Hier das tatsächliche Passwort einsetzen
+      try {
+        await deleteDoc(doc(db, "orders", orderToDelete.id));
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderToDelete.id));
+        setShowPasswordPrompt(false);
+        setPassword("");
+        setOrderToDelete(null);
+      } catch (error) {
+        console.error("Fehler beim Löschen des Auftrags:", error);
+      }
+    } else {
+      alert("Falsches Passwort");
+    }
+  };
+
+  const handleDeleteClick = (orderId) => {
+    setOrderToDelete(orders.find(order => order.id === orderId));
+    setShowPasswordPrompt(true);
+  };
+
   const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
 
   return (
@@ -106,6 +130,7 @@ export default function ProductionProgress() {
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
+
       {filteredOrders.map((order) => (
         <Card key={order.id} className={`p-2 relative ${getStatusColor(order)}`}>
           <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
@@ -119,8 +144,27 @@ export default function ProductionProgress() {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute top-2 right-2">
+            <X size={16} />
+          </Button>
         </Card>
       ))}
+
+      {showPasswordPrompt && (
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-md shadow-lg">
+            <h3 className="font-bold">Passwort zum Löschen eingeben</h3>
+            <Input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="Passwort" 
+            />
+            <Button onClick={deleteOrder}>Löschen</Button>
+            <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
