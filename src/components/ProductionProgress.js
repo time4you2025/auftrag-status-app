@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Card } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
-import { db } from "../firebaseConfig"; // Import für Firebase Firestore
-import { collection, getDocs, doc, setDoc, updateDoc } from "firebase/firestore"; // Import der Firebase-Funktionen im modularen Ansatz
+import { X } from "lucide-react";
+import { collection, addDoc, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
@@ -16,12 +17,23 @@ function getCurrentCalendarWeek() {
   return Math.ceil((pastDays + firstDayOfYear.getDay() + 1) / 7);
 }
 
+function getStatusColor(order) {
+  if (order.progress.every(step => step)) return "bg-green-500"; // Alle Schritte abgeschlossen: grün
+  const currentWeek = getCurrentCalendarWeek();
+  const diff = currentWeek - order.week;
+
+  if (diff < -1) return "bg-green-500"; // Mehr als eine Woche im Voraus: grün
+  if (diff === -1) return "bg-yellow-500"; // Eine Woche im Voraus: gelb
+  if (diff === 0) return "bg-orange-500"; // Diese Woche: orange
+  return "bg-red-500"; // Zu spät: rot
+}
+
 export default function ProductionProgress() {
   const [orders, setOrders] = useState([]);
   const [newOrder, setNewOrder] = useState("");
   const [newWeek, setNewWeek] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  
+
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -46,7 +58,7 @@ export default function ProductionProgress() {
 
       try {
         const docRef = doc(db, "orders", newOrderData.id);
-        await setDoc(docRef, newOrderData); // Hier wird setDoc verwendet
+        await setDoc(docRef, newOrderData);
         setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
         setNewOrder("");
         setNewWeek("");
@@ -95,7 +107,7 @@ export default function ProductionProgress() {
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
       {filteredOrders.map((order) => (
-        <Card key={order.id} className="p-2 relative">
+        <Card key={order.id} className={`p-2 relative ${getStatusColor(order)}`}>
           <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
           <div className="flex flex-wrap gap-2 mt-2">
