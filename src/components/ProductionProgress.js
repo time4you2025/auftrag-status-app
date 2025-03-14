@@ -46,7 +46,8 @@ export default function ProductionProgress() {
       };
 
       try {
-        const docRef = await addDoc(collection(db, "orders"), newOrderData);
+        const docRef = doc(db, "orders", newOrderData.id);
+        await setDoc(docRef, newOrderData);
         setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
         setNewOrder("");
         setNewWeek("");
