@@ -1,5 +1,5 @@
 // tailwind.config.js
-export default {
+module.export = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {},
