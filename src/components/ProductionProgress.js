@@ -17,24 +17,12 @@ function getCurrentCalendarWeek() {
   return Math.ceil((pastDays + firstDayOfYear.getDay() + 1) / 7);
 }
 
-function getStatusColor(order) {
-  if (order.progress.every(step => step)) return "bg-green-500";
-  const currentWeek = getCurrentCalendarWeek();
-  const diff = currentWeek - order.week;
-  if (diff < -1) return "bg-green-500";
-  if (diff === -1) return "bg-yellow-500";
-  if (diff === 0) return "bg-orange-500";
-  return "bg-red-500";
-}
-
 export default function ProductionProgress() {
   const [orders, setOrders] = useState([]);
   const [newOrder, setNewOrder] = useState("");
   const [newWeek, setNewWeek] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [deletePassword, setDeletePassword] = useState("");
-  const [showPasswordInput, setShowPasswordInput] = useState(null);
-
+  
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -51,6 +39,7 @@ export default function ProductionProgress() {
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
       const newOrderData = {
+        id: newOrder.trim(),
         week: parseInt(newWeek, 10),
         progress: Array(steps.length).fill(false),
         remark: ""
@@ -73,7 +62,8 @@ export default function ProductionProgress() {
     const order = orders.find(o => o.id === orderId);
     if (!order || (index > 0 && !order.progress[index - 1])) return;
 
-    const updatedProgress = order.progress.map((step, i) => (i === index ? !step : step));
+    const updatedProgress = [...order.progress];
+    updatedProgress[index] = !updatedProgress[index];
 
     try {
       await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
@@ -89,21 +79,6 @@ export default function ProductionProgress() {
       setOrders(prev => prev.map(order => (order.id === orderId ? { ...order, remark } : order)));
     } catch (error) {
       console.error("Fehler beim Aktualisieren der Bemerkung:", error);
-    }
-  };
-
-  const deleteOrder = async (orderId) => {
-    if (deletePassword === "t4y") {
-      try {
-        await deleteDoc(doc(db, "orders", orderId));
-        setOrders(orders.filter(order => order.id !== orderId));
-        setDeletePassword("");
-        setShowPasswordInput(null);
-      } catch (error) {
-        console.error("Fehler beim Löschen des Auftrags:", error);
-      }
-    } else {
-      alert("Falsches Passwort!");
     }
   };
 
