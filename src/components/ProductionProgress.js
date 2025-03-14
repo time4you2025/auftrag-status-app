@@ -98,7 +98,7 @@ export default function ProductionProgress() {
   };
 
   const deleteOrder = async () => {
-    if (password === "DeinPasswort123") { // Hier das tatsächliche Passwort einsetzen
+    if (password === "t4y") { // Hier das tatsächliche Passwort einsetzen
       try {
         await deleteDoc(doc(db, "orders", orderToDelete.id));
         setOrders(prevOrders => prevOrders.filter(order => order.id !== orderToDelete.id));
@@ -119,6 +119,7 @@ export default function ProductionProgress() {
   };
 
   const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
+  const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
     <div className="p-4 grid gap-2 bg-green-600 min-h-screen">
@@ -131,7 +132,7 @@ export default function ProductionProgress() {
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
 
-      {filteredOrders.map((order) => (
+      {SORTED_ORDERS.map((order) => (
         <Card key={order.id} className={`p-2 relative ${getStatusColor(order)}`}>
           <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
