@@ -18,8 +18,6 @@ function getCurrentCalendarWeek() {
 }
 
 function getStatusColor(order) {
-  console.log(`Order: ${order.id}, Week: ${order.week}, Diff: ${getCurrentCalendarWeek() - order.week}`);
-  console.log("Progress: ", order.progress); // Neues Log
   if (order.progress.every(step => step)) return "bg-green-500"; // Alle Schritte abgeschlossen: grün
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
@@ -127,16 +125,20 @@ export default function ProductionProgress() {
     <div className="p-4 grid gap-2 bg-green-600 min-h-screen">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
-      <div className="flex flex-wrap gap-1 mb-2 w-fit">
+      <div className="flex gap-1 mb-2">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" />
         <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" />
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      <Input className="w-fit" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
+      <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
 
       {SORTED_ORDERS.map((order) => (
-        <Card key={order.id} className={`p-2 relative ${getStatusColor(order)}`}>
-          <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
+        <Card key={order.id} className="p-2 relative">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
+            {/* Farbiges Punkt für den Status */}
+            <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
+          </div>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
@@ -147,7 +149,7 @@ export default function ProductionProgress() {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2">
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute top-2 right-2">
             <X size={16} />
           </Button>
         </Card>
