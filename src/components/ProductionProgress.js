@@ -181,9 +181,7 @@ export default function ProductionProgress() {
 
       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div className="my-4">
-          <Html5QrcodeScanner delay={300} onScan={handleScan} onError={handleError} style={{ width: "100%" }} />
-        </div>
+        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
 
      {/* Anzeige des gescannten Auftrags */}
