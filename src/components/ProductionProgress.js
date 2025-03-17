@@ -208,7 +208,9 @@ export default function ProductionProgress() {
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
           </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} />
+          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
+            className={order.progress.every(step => step) ? "bg-green-500" : ""}
+          />
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
               <label key={index} className="flex items-center gap-1 text-xs">
