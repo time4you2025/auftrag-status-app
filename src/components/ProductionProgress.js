@@ -218,7 +218,7 @@ export default function ProductionProgress() {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2">
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2 p-1">
             <X size={16} />
           </Button>
         </Card>
