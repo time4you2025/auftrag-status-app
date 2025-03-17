@@ -4,7 +4,7 @@ import Checkbox from "../components/ui/checkbox";
 import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
-import { X, CheckCircle } from "lucide-react";
+import { X, CheckCircle, Camera } from "lucide-react";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { Html5QrcodeScanner } from "html5-qrcode"; // Importiere den QR-Reader
@@ -39,6 +39,7 @@ export default function ProductionProgress() {
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
   const scannerRef = useRef(null);
+  const [isScannerVisible, setIsScannerVisible] = useState(false);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -74,6 +75,7 @@ export default function ProductionProgress() {
       const orderSnapshot = await getDoc(orderDoc);
 
       if (orderSnapshot.exists()) {
+        setSearchQuery(orderId);  // Setzt die Suchabfrage auf den gescannten Auftrag
         setScannedOrder({ id: orderSnapshot.id, ...orderSnapshot.data() });
       } else {
         console.log("Auftrag nicht gefunden");
@@ -167,10 +169,22 @@ export default function ProductionProgress() {
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
       
-       {/* QR Code Scanner */}
+         {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-4">
-        <div id="qr-code-scanner" style={{ width: "100%" }}></div>
+        <Button
+          className="bg-blue-500 p-2 rounded-full"
+          onClick={() => setIsScannerVisible(true)}
+        >
+          <Camera size={24} color="white" />
+        </Button>
       </div>
+
+      {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
+      {isScannerVisible && (
+        <div className="my-4">
+          <Html5QrcodeScanner delay={300} onScan={handleScan} onError={handleError} style={{ width: "100%" }} />
+        </div>
+      )}
 
      {/* Anzeige des gescannten Auftrags */}
       {scannedOrder && (
