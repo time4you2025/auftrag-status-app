@@ -156,7 +156,7 @@ export default function ProductionProgress() {
   const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
-    <div className="p-4 grid gap-2 bg-green-600 min-h-screen">
+    <div className="p-4 grid gap-0.5 bg-green-600 min-h-screen">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="flex gap-0.5 mb-1">
@@ -167,7 +167,7 @@ export default function ProductionProgress() {
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" 
-        style={{ height: '14px'}}/>
+        className="h-10 text-sm mb-0" />
       
          {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-2">
