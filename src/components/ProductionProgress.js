@@ -72,16 +72,7 @@ export default function ProductionProgress() {
 
   const handleScan = async (data) => {
     if (data) {
-      const orderId = data; // Angenommen, der QR-Code enthält die Auftrags-ID
-      const orderDoc = doc(db, "orders", orderId);
-      const orderSnapshot = await getDoc(orderDoc);
-
-      if (orderSnapshot.exists()) {
-        setSearchQuery(orderId);  // Setzt die Suchabfrage auf den gescannten Auftrag
-        setScannedOrder({ id: orderSnapshot.id, ...orderSnapshot.data() });
-      } else {
-        console.log("Auftrag nicht gefunden");
-      }
+      setSearchQuery(data);  // Setzt die Suchabfrage auf den gescannten Auftrag
     }
   };
 
@@ -89,6 +80,10 @@ export default function ProductionProgress() {
     console.error("Fehler beim Scannen des QR-Codes:", err);
   };
 
+ const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
+  };
+  
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
       const newOrderData = {
