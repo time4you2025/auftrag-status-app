@@ -7,7 +7,7 @@ const Input = ({ type = "text", value, onChange, placeholder = "" }) => {
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className="border p-2 rounded w-full"
+            className="border p-2 rounded w-full h-10"
         />
     );
 };
