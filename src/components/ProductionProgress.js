@@ -55,7 +55,8 @@ export default function ProductionProgress() {
   }, []);
  useEffect(() => {
     // HTML5-QR-Scanner initialisieren
-    const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+  if (isScannerVisible) {
+   const scanner = new Html5QrcodeScanner("qr-code-scanner", {
       fps: 10,
       qrbox: 250,
     });
