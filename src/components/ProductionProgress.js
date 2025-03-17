@@ -5,7 +5,7 @@ import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X, CheckCircle } from "lucide-react";
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import QrReader from "react-qr-reader"; // Importiere den QR-Reader
 
