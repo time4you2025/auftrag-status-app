@@ -181,7 +181,7 @@ export default function ProductionProgress() {
 
       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
+        <div ref={scannerRef} className="my-4" style={{ height: '300px' }}></div>
       )}
 
      {/* Anzeige des gescannten Auftrags */}
