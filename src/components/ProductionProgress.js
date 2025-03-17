@@ -161,13 +161,13 @@ export default function ProductionProgress() {
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="flex gap-1 mb-2">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
-        className="h-10" />
+        className="h-4" />
         <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" 
-          className="h-10"/>
+          className="h-4"/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" 
-        className="h-10"/>
+        className="h-4"/>
       
          {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-4">
