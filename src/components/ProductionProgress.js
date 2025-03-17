@@ -38,6 +38,7 @@ export default function ProductionProgress() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
+  const scannerRef = useRef(null);
 
   useEffect(() => {
     async function fetchOrders() {
@@ -50,6 +51,20 @@ export default function ProductionProgress() {
       }
     }
     fetchOrders();
+  }, []);
+ useEffect(() => {
+    // HTML5-QR-Scanner initialisieren
+    const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+      fps: 10,
+      qrbox: 250,
+    });
+
+    scanner.render(handleScan, handleError);
+    scannerRef.current = scanner;
+
+    return () => {
+      scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
+    };
   }, []);
 
   const handleScan = async (data) => {
@@ -152,12 +167,12 @@ export default function ProductionProgress() {
       </div>
       <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" />
       
-      {/* QR Code Scanner */}
+       {/* QR Code Scanner */}
       <div className="my-4">
-        <QrReader delay={300} onScan={handleScan} onError={handleError} style={{ width: "100%" }} />
+        <div id="qr-code-scanner" style={{ width: "100%" }}></div>
       </div>
 
-      {/* Anzeige des gescannten Auftrags */}
+     {/* Anzeige des gescannten Auftrags */}
       {scannedOrder && (
         <Card className="p-2 mt-4">
           <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
@@ -173,7 +188,6 @@ export default function ProductionProgress() {
           <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
         </Card>
       )}
-
       {SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 relative">
           <div className="flex items-center gap-2">
