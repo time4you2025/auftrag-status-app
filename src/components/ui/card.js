@@ -10,7 +10,7 @@ export function Card({ children, className, statusColor }) {
         className={`w-4 h-4 rounded-full absolute top-2 left-2 ${statusColor} z-10`}
       ></div>
       {children}
-    </div>
+    </div> 
   );
 }
 
