@@ -209,8 +209,11 @@ export default function ProductionProgress() {
             )}
           </div>
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
-            className={order.progress.every(step => step) ? "bg-green-500" : ""}
-          />
+  className={`
+    ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
+    transition-all duration-300
+  `}
+/>
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
               <label key={index} className="flex items-center gap-1 text-xs">
