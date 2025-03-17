@@ -7,7 +7,7 @@ import Input from "../components/ui/input";
 import { X, CheckCircle } from "lucide-react";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
-import QrReader from "html5-qrcode"; // Importiere den QR-Reader
+import { Html5QrcodeScanner } from "html5-qrcode"; // Importiere den QR-Reader
 
 const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
 
