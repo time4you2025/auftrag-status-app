@@ -159,7 +159,7 @@ export default function ProductionProgress() {
     <div className="p-4 grid gap-2 bg-green-600 min-h-screen">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
-      <div className="flex gap-1 mb-2">
+      <div className="flex gap-0.5 mb-1">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
         style={{ height: '14px'}} />
         <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" 
@@ -170,7 +170,7 @@ export default function ProductionProgress() {
         style={{ height: '14px'}}/>
       
          {/* QR-Code-Scanner als Symbol anzeigen */}
-      <div className="my-4">
+      <div className="my-2">
         <Button
   className="bg-blue-500 p-2 rounded-full"
   onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
