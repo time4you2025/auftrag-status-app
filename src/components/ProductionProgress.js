@@ -169,11 +169,12 @@ export default function ProductionProgress() {
          {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-4">
         <Button
-          className="bg-blue-500 p-2 rounded-full"
-          onClick={() => setIsScannerVisible(true)}
-        >
-          <Camera size={24} color="white" />
-        </Button>
+  className="bg-blue-500 p-2 rounded-full"
+  onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
+>
+  <Camera size={24} color="white" />
+</Button>
+
       </div>
 
        {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
