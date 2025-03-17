@@ -64,9 +64,10 @@ export default function ProductionProgress() {
     scannerRef.current = scanner;
 
     return () => {
-      scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
-    };
-  }, []);
+        scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
+      };
+    }
+  }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
   const handleScan = async (data) => {
     if (data) {
@@ -179,9 +180,9 @@ export default function ProductionProgress() {
         </Button>
       </div>
 
-      {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
+       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div ref={scannerRef} className="my-4" style={{ height: '300px' }}></div>
+        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
 
      {/* Anzeige des gescannten Auftrags */}
