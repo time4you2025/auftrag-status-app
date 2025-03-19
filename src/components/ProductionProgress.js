@@ -105,6 +105,8 @@ export default function ProductionProgress() {
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Fortschritts:", error);
       alert("Fehler beim Aktualisieren des Fortschritts.");
+    } catch (error) {
+      handleError(error);  // Verwende die handleError-Funktion, um den Fehler zu verarbeiten
     }
   }
 };
