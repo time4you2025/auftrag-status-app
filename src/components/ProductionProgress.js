@@ -105,12 +105,14 @@ export default function ProductionProgress() {
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Fortschritts:", error);
       alert("Fehler beim Aktualisieren des Fortschritts.");
-    } catch (error) {
       handleError(error);  // Verwende die handleError-Funktion, um den Fehler zu verarbeiten
     }
   }
 };
-
+const handleError = (err) => {
+  console.error("Fehler beim Scannen des QR-Codes:", err);
+  // Optional: Zeige eine Fehlermeldung im UI an
+};
 
  const toggleScannerVisibility = () => {
     setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
