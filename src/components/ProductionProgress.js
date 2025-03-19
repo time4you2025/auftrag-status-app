@@ -71,14 +71,44 @@ export default function ProductionProgress() {
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
   const handleScan = async (data) => {
-    if (data) {
-      setSearchQuery(data);  // Setzt die Suchabfrage auf den gescannten Auftrag
-    }
-  };
+  if (data) {
+    setSearchQuery(data);  // Setzt die Suchabfrage auf den gescannten Auftrag
+    const orderId = data;  // Angenommen, der QR-Code enthält direkt die Auftrags-ID
 
-  const handleError = (err) => {
-    console.error("Fehler beim Scannen des QR-Codes:", err);
-  };
+    // Hole den Auftrag aus der Datenbank
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnapshot = await getDoc(orderRef);
+
+    if (orderSnapshot.exists()) {
+      const order = orderSnapshot.data();
+
+      // Finde den nächsten offenen Schritt und aktualisiere den Fortschritt
+      const progressIndex = order.progress.findIndex(step => !step);
+      if (progressIndex !== -1) {
+        const updatedProgress = [...order.progress];
+        updatedProgress[progressIndex] = true;  // Setzt den nächsten Schritt auf "erledigt"
+
+        try {
+          // Aktualisiere den Auftrag in der Datenbank
+          await updateDoc(orderRef, { progress: updatedProgress });
+          
+          // Update im Frontend
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+
+          // Optional: Zeige den aktualisierten Auftrag nach dem Scannen an
+          setScannedOrder({ ...order, progress: updatedProgress });
+        } catch (error) {
+          console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+        }
+      } else {
+        alert("Alle Schritte sind bereits abgeschlossen.");
+      }
+    } else {
+      console.log("Auftrag nicht gefunden!");
+    }
+  }
+};
+
 
  const toggleScannerVisibility = () => {
     setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
