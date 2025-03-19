@@ -108,6 +108,10 @@ export default function ProductionProgress() {
     }
   }
 };
+const handleError = (err) => {
+  console.error("Fehler beim Scannen des QR-Codes:", err);
+  // Optional: Zeige eine Fehlermeldung im UI an
+};
 
 
  const toggleScannerVisibility = () => {
