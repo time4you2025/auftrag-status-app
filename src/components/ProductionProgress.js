@@ -70,49 +70,43 @@ export default function ProductionProgress() {
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
-  const handleScan = async (data) => {
+ const handleScan = async (data) => {
   if (data) {
     setSearchQuery(data);  // Setzt die Suchabfrage auf den gescannten Auftrag
     const orderId = data;  // Angenommen, der QR-Code enthält direkt die Auftrags-ID
 
-    // Hole den Auftrag aus der Datenbank
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnapshot = await getDoc(orderRef);
+    try {
+      // Hole den Auftrag aus der Datenbank
+      const orderRef = doc(db, "orders", orderId);
+      const orderSnapshot = await getDoc(orderRef);
 
-    if (orderSnapshot.exists()) {
-      const order = orderSnapshot.data();
+      if (orderSnapshot.exists()) {
+        const order = orderSnapshot.data();
 
-      // Finde den nächsten offenen Schritt und aktualisiere den Fortschritt
-      const progressIndex = order.progress.findIndex(step => !step);
-      if (progressIndex !== -1) {
-        const updatedProgress = [...order.progress];
-        updatedProgress[progressIndex] = true;  // Setzt den nächsten Schritt auf "erledigt"
+        // Finde den nächsten offenen Schritt und aktualisiere den Fortschritt
+        const progressIndex = order.progress.findIndex(step => !step);
+        if (progressIndex !== -1) {
+          const updatedProgress = [...order.progress];
+          updatedProgress[progressIndex] = true;  // Setzt den nächsten Schritt auf "erledigt"
 
-        try {
           // Aktualisiere den Auftrag in der Datenbank
           await updateDoc(orderRef, { progress: updatedProgress });
           
           // Update im Frontend
           setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
 
-                  } catch (error) {
-          console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+          console.log("Fortschritt erfolgreich aktualisiert:", updatedProgress);
+        } else {
+          alert("Alle Schritte sind bereits abgeschlossen.");
         }
       } else {
-        alert("Alle Schritte sind bereits abgeschlossen.");
+        console.log("Auftrag nicht gefunden!");
       }
-      console.log("Fortschritt erfolgreich aktualisiert:", updatedProgress);
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-    alert("Fehler beim Aktualisieren des Fortschritts.");
-    } else {
-      console.log("Auftrag nicht gefunden!");
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+      alert("Fehler beim Aktualisieren des Fortschritts.");
     }
   }
-};
-const handleError = (err) => {
-  console.error("Fehler beim Scannen des QR-Codes:", err);
-  // Optional: Zeige eine Fehlermeldung im UI an
 };
 
 
