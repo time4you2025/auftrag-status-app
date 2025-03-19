@@ -157,7 +157,7 @@ export default function ProductionProgress() {
 
   return (
     <div className="p-4 grid gap-0.5 bg-green-600 min-h-screen">
-      <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus</h1>
+      <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="flex gap-0.5 mb-1">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
