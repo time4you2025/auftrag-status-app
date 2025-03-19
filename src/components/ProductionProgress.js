@@ -95,14 +95,16 @@ export default function ProductionProgress() {
           // Update im Frontend
           setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
 
-          // Optional: Zeige den aktualisierten Auftrag nach dem Scannen an
-          setScannedOrder({ ...order, progress: updatedProgress });
-        } catch (error) {
+                  } catch (error) {
           console.error("Fehler beim Aktualisieren des Fortschritts:", error);
         }
       } else {
         alert("Alle Schritte sind bereits abgeschlossen.");
       }
+      console.log("Fortschritt erfolgreich aktualisiert:", updatedProgress);
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+    alert("Fehler beim Aktualisieren des Fortschritts.");
     } else {
       console.log("Auftrag nicht gefunden!");
     }
