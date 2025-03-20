@@ -58,10 +58,7 @@ export default function ProductionProgress() {
   const [showCheck, setShowCheck] = useState(false);
   const [isScannerVisible, setIsScannerVisible] = useState(false); // Zustand, ob der Scanner sichtbar ist
  
-   const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
-  };
-   
+     
   useEffect(() => {
     if (isScannerVisible) {
       const scanner = new Html5QrcodeScanner("qr-code-scanner", {
