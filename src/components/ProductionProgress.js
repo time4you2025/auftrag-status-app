@@ -126,7 +126,7 @@ const ScannerComponent = () => {
       console.error("Unerwarteter Fehler beim Verarbeiten des Scans:", error);
       alert("Ein unerwarteter Fehler ist aufgetreten.");
     }
-
+  };
     // Setze eine Verzögerung von 30 Sekunden, bevor wieder gescannt werden kann
     setTimeout(() => {
       lastScannedOrderRef.current = null;
