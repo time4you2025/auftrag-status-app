@@ -97,12 +97,16 @@ const handleScan = async (data) => {
         // Update im UI
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
 
-        console.log("Neuer Fortschritt:", updatedProgress); // Debugging
+        console.log("Neuer Fortschritt:", updatedProgress);
+          
+          // Zeige die grüne Check-Animation
+          setShowCheck(true);
+          setTimeout(() => setShowCheck(false), 3000); // Nach 3 Sekunden ausblenden
+        } else {
+          alert("Alle Schritte sind bereits abgeschlossen.");
+        }
       } else {
-        alert("Alle Schritte sind bereits abgeschlossen.");
-      }
-    } else {
-      console.log("Auftrag nicht gefunden!");
+        console.log("Auftrag nicht gefunden!");
     }
   } catch (error) {
     console.error("Fehler beim Aktualisieren des Fortschritts:", error);
@@ -112,7 +116,7 @@ const handleScan = async (data) => {
   // Setze eine Verzögerung, bevor wieder gescannt werden kann
   setTimeout(() => {
     lastScannedOrderRef.current = null;
-  }, 3000); // 3 Sekunden Sperrzeit für den nächsten Scan
+  }, 30000); // 30 Sekunden Sperrzeit für den nächsten Scan
 };
 const handleError = (err) => {
   console.error("Fehler beim Scannen des QR-Codes:", err);
