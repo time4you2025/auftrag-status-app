@@ -5,7 +5,7 @@ import { Progress } from "../components/ui/progress";
 import Button from "../components/ui/button";
 import Input from "../components/ui/input";
 import { X, CheckCircle, Camera } from "lucide-react";
-import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, getDocs, doc, setDoc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 import { Html5QrcodeScanner } from "html5-qrcode"; // Importiere den QR-Reader 
 
@@ -42,16 +42,14 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
 
   useEffect(() => {
-    async function fetchOrders() {
-      try {
-        const snapshot = await getDocs(collection(db, "orders"));
-        const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setOrders(ordersData);
-      } catch (error) {
-        console.error("Fehler beim Abrufen der Daten:", error);
-      }
-    }
-    fetchOrders();
+    // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
+    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+      const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setOrders(ordersData);
+    });
+
+    // Aufräumen: unsubscribe bei Unmount der Komponente
+    return () => unsubscribe();
   }, []);
  useEffect(() => {
     // HTML5-QR-Scanner initialisieren
@@ -98,8 +96,7 @@ const handleScan = async (data) => {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
 
         console.log("Neuer Fortschritt:", updatedProgress); // Debugging
-        setScannedOrder(order);
-  alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
+        alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
       } else {
             alert("Alle Schritte sind bereits abgeschlossen.");
       }
