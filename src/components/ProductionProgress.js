@@ -57,12 +57,7 @@ export default function ProductionProgress() {
     }
     fetchOrders();
   }, []);
- const ScannerComponent = () => {
-  const lastScannedOrderRef = useRef(null);
-  const [showCheck, setShowCheck] = useState(false);
-  const [isScannerVisible, setIsScannerVisible] = useState(false); // Zustand, ob der Scanner sichtbar ist
-
-   
+    
      
   useEffect(() => {
     if (isScannerVisible) {
@@ -71,79 +66,54 @@ export default function ProductionProgress() {
         qrbox: 250,
       });
 
-      scanner.render(handleScan, handleError);
-      scannerRef.current = scanner;
+      const handleScan = async (data) => {
+        if (!data) return;
+        const orderId = data.trim();
+        try {
+          const orderRef = doc(db, "orders", orderId);
+          const orderSnapshot = await getDoc(orderRef);
 
+          if (!orderSnapshot.exists()) {
+            alert("Auftrag nicht gefunden!");
+            return;
+          }
+
+          const order = orderSnapshot.data();
+          if (!Array.isArray(order.progress)) {
+            alert("Fehler: 'progress' ist kein Array!");
+            return;
+          }
+
+          const progressIndex = order.progress.findIndex(step => !step);
+          if (progressIndex === -1) {
+            alert("Alle Schritte sind bereits abgeschlossen.");
+            return;
+          }
+
+          const updatedProgress = [...order.progress];
+          updatedProgress[progressIndex] = true;
+
+          await updateDoc(orderRef, { progress: updatedProgress });
+
+          setScannedOrder({ ...order, progress: updatedProgress });
+        } catch (error) {
+          console.error("Fehler beim Verarbeiten des Scans:", error);
+        }
+      };
+
+      const handleError = (err) => {
+        console.error("Fehler beim Scannen des QR-Codes:", err);
+      };
+
+      scanner.render(handleScan, handleError);
+      
       return () => {
         scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
       };
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
-  const handleScan = async (data) => {
-    if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
-    lastScannedOrderRef.current = data;
-
-    const orderId = data.trim();
-    try {
-      console.log(`Scanning Order ID: ${orderId}`);
-
-      const orderRef = doc(db, "orders", orderId);
-      const orderSnapshot = await getDoc(orderRef);
-
-      if (!orderSnapshot.exists()) {
-        console.error("Fehler: Auftrag nicht gefunden.");
-        alert("Auftrag nicht gefunden!");
-        return;
-      }
-
-      const order = orderSnapshot.data();
-      console.log("Vorheriger Fortschritt:", order.progress);
-
-      if (!Array.isArray(order.progress)) {
-        console.error("Fehler: 'progress' ist kein Array!");
-        alert("Fehler: Datenstruktur fehlerhaft.");
-        return;
-      }
-
-      const progressIndex = order.progress.findIndex(step => !step);
-      if (progressIndex === -1) {
-        alert("Alle Schritte sind bereits abgeschlossen.");
-        return;
-      }
-
-      const updatedProgress = [...order.progress];
-      updatedProgress[progressIndex] = true;
-
-      try {
-        await updateDoc(orderRef, { progress: updatedProgress });
-        console.log("Neuer Fortschritt erfolgreich gespeichert:", updatedProgress);
-      } catch (updateError) {
-        console.error("Fehler beim Aktualisieren in Firestore:", updateError);
-        alert("Fehler beim Speichern in Firestore.");
-        return;
-      }
-
-      // Zeige die grüne Check-Animation
-      setShowCheck(true);
-      setTimeout(() => setShowCheck(false), 2000);
-
-    } catch (error) {
-      console.error("Unerwarteter Fehler beim Verarbeiten des Scans:", error);
-      alert("Ein unerwarteter Fehler ist aufgetreten.");
-    }
-
-    // Setze eine Verzögerung von 30 Sekunden, bevor wieder gescannt werden kann
-    setTimeout(() => {
-      lastScannedOrderRef.current = null;
-      console.log("Scan-Sperre aufgehoben.");
-    }, 30000);
-  };
-
-  const handleError = (err) => {
-    console.error("Fehler beim Scannen des QR-Codes:", err);
-    // Optional: Zeige eine Fehlermeldung im UI an
-  };
+   
 
     return (
     <div>
