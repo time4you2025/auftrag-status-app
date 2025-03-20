@@ -70,54 +70,69 @@ export default function ProductionProgress() {
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
- const lastScannedOrderRef = useRef(null); // Merkt sich die letzte gescannte ID
+const ScannerComponent = () => {
+  const lastScannedOrderRef = useRef(null);
+  const [showCheck, setShowCheck] = useState(false);
 
-const handleScan = async (data) => {
-  if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
-  lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
+  const handleScan = async (data) => {
+    if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
+    lastScannedOrderRef.current = data;
 
-  const orderId = data.trim();  
-  try {
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnapshot = await getDoc(orderRef);
+    const orderId = data.trim();
+    try {
+      console.log(`Scanning Order ID: ${orderId}`);
 
-    if (orderSnapshot.exists()) {
+      const orderRef = doc(db, "orders", orderId);
+      const orderSnapshot = await getDoc(orderRef);
+
+      if (!orderSnapshot.exists()) {
+        console.error("Fehler: Auftrag nicht gefunden.");
+        alert("Auftrag nicht gefunden!");
+        return;
+      }
+
       const order = orderSnapshot.data();
-      console.log("Vorheriger Fortschritt:", order.progress); // Debugging
+      console.log("Vorheriger Fortschritt:", order.progress);
 
-      // Finde den nächsten offenen Schritt
+      if (!Array.isArray(order.progress)) {
+        console.error("Fehler: 'progress' ist kein Array!");
+        alert("Fehler: Datenstruktur fehlerhaft.");
+        return;
+      }
+
       const progressIndex = order.progress.findIndex(step => !step);
-      if (progressIndex !== -1) {
-        const updatedProgress = [...order.progress];
-        updatedProgress[progressIndex] = true;  // Nur einen Schritt auf "erledigt" setzen
+      if (progressIndex === -1) {
+        alert("Alle Schritte sind bereits abgeschlossen.");
+        return;
+      }
 
-        // Auftrag in der Datenbank aktualisieren
+      const updatedProgress = [...order.progress];
+      updatedProgress[progressIndex] = true;
+
+      try {
         await updateDoc(orderRef, { progress: updatedProgress });
+        console.log("Neuer Fortschritt erfolgreich gespeichert:", updatedProgress);
+      } catch (updateError) {
+        console.error("Fehler beim Aktualisieren in Firestore:", updateError);
+        alert("Fehler beim Speichern in Firestore.");
+        return;
+      }
 
-        // Update im UI
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+      // Zeige die grüne Check-Animation
+      setShowCheck(true);
+      setTimeout(() => setShowCheck(false), 2000);
 
-        console.log("Neuer Fortschritt:", updatedProgress);
-          
-          // Zeige die grüne Check-Animation
-          setShowCheck(true);
-          setTimeout(() => setShowCheck(false), 3000); // Nach 3 Sekunden ausblenden
-        } else {
-          alert("Alle Schritte sind bereits abgeschlossen.");
-        }
-      } else {
-        console.log("Auftrag nicht gefunden!");
+    } catch (error) {
+      console.error("Unerwarteter Fehler beim Verarbeiten des Scans:", error);
+      alert("Ein unerwarteter Fehler ist aufgetreten.");
     }
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-    alert("Fehler beim Aktualisieren des Fortschritts.");
-  }
 
-  // Setze eine Verzögerung, bevor wieder gescannt werden kann
-  setTimeout(() => {
-    lastScannedOrderRef.current = null;
-  }, 30000); // 30 Sekunden Sperrzeit für den nächsten Scan
-};
+    // Setze eine Verzögerung von 30 Sekunden, bevor wieder gescannt werden kann
+    setTimeout(() => {
+      lastScannedOrderRef.current = null;
+      console.log("Scan-Sperre aufgehoben.");
+    }, 30000);
+  };
 const handleError = (err) => {
   console.error("Fehler beim Scannen des QR-Codes:", err);
   // Optional: Zeige eine Fehlermeldung im UI an
