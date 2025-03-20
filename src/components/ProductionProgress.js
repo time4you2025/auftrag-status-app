@@ -41,6 +41,10 @@ export default function ProductionProgress() {
   const scannerRef = useRef(null);
   const [isScannerVisible, setIsScannerVisible] = useState(false);
 
+  const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
+  }; 
+
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -58,9 +62,7 @@ export default function ProductionProgress() {
   const [showCheck, setShowCheck] = useState(false);
   const [isScannerVisible, setIsScannerVisible] = useState(false); // Zustand, ob der Scanner sichtbar ist
 
-   const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
-  }; 
+   
      
   useEffect(() => {
     if (isScannerVisible) {
