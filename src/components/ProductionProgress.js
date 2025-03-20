@@ -84,7 +84,7 @@ export default function ProductionProgress() {
         const order = orderSnapshot.data();
 
         // Finde den nächsten offenen Schritt und aktualisiere den Fortschritt
-        const progressIndex = order.progress.findIndex(step => !step);
+        const progressIndex = order.progress.findIndex(step => step === false);
         if (progressIndex !== -1) {
           const updatedProgress = [...order.progress];
           updatedProgress[progressIndex] = true;  // Setzt den nächsten Schritt auf "erledigt"
