@@ -53,26 +53,26 @@ export default function ProductionProgress() {
     }
     fetchOrders();
   }, []);
- useEffect(() => {
-    // HTML5-QR-Scanner initialisieren
-  if (isScannerVisible) {
-   const scanner = new Html5QrcodeScanner("qr-code-scanner", {
-      fps: 10,
-      qrbox: 250,
-    });
+ const ScannerComponent = () => {
+  const lastScannedOrderRef = useRef(null);
+  const [showCheck, setShowCheck] = useState(false);
+  const [isScannerVisible, setIsScannerVisible] = useState(false); // Zustand, ob der Scanner sichtbar ist
 
-    scanner.render(handleScan, handleError);
-    scannerRef.current = scanner;
+  useEffect(() => {
+    if (isScannerVisible) {
+      const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+        fps: 10,
+        qrbox: 250,
+      });
 
-    return () => {
+      scanner.render(handleScan, handleError);
+      scannerRef.current = scanner;
+
+      return () => {
         scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
       };
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
-
-const ScannerComponent = () => {
-  const lastScannedOrderRef = useRef(null);
-  const [showCheck, setShowCheck] = useState(false);
 
   const handleScan = async (data) => {
     if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
@@ -126,21 +126,33 @@ const ScannerComponent = () => {
       console.error("Unerwarteter Fehler beim Verarbeiten des Scans:", error);
       alert("Ein unerwarteter Fehler ist aufgetreten.");
     }
-  };
+
     // Setze eine Verzögerung von 30 Sekunden, bevor wieder gescannt werden kann
     setTimeout(() => {
       lastScannedOrderRef.current = null;
       console.log("Scan-Sperre aufgehoben.");
     }, 30000);
   };
-const handleError = (err) => {
-  console.error("Fehler beim Scannen des QR-Codes:", err);
-  // Optional: Zeige eine Fehlermeldung im UI an
-};
 
- const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
+  const handleError = (err) => {
+    console.error("Fehler beim Scannen des QR-Codes:", err);
+    // Optional: Zeige eine Fehlermeldung im UI an
   };
+
+  const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
+  };
+
+  return (
+    <div>
+      <button onClick={toggleScannerVisibility}>
+        {isScannerVisible ? "Scanner ausblenden" : "Scanner anzeigen"}
+      </button>
+      {isScannerVisible && <div id="qr-code-scanner"></div>}
+      {showCheck && <div className="check-animation">✔️</div>}
+    </div>
+  );
+};
   
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
