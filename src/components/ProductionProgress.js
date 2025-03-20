@@ -41,10 +41,6 @@ export default function ProductionProgress() {
   const scannerRef = useRef(null);
   const [isScannerVisible, setIsScannerVisible] = useState(false);
 
-  const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
-  }; 
-
   useEffect(() => {
     async function fetchOrders() {
       try {
@@ -57,74 +53,75 @@ export default function ProductionProgress() {
     }
     fetchOrders();
   }, []);
-    
-     
-  useEffect(() => {
-    if (isScannerVisible) {
-      const scanner = new Html5QrcodeScanner("qr-code-scanner", {
-        fps: 10,
-        qrbox: 250,
-      });
+ useEffect(() => {
+    // HTML5-QR-Scanner initialisieren
+  if (isScannerVisible) {
+   const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+      fps: 10,
+      qrbox: 250,
+    });
 
-      const handleScan = async (data) => {
-        if (!data) return;
-        const orderId = data.trim();
-        try {
-          const orderRef = doc(db, "orders", orderId);
-          const orderSnapshot = await getDoc(orderRef);
+    scanner.render(handleScan, handleError);
+    scannerRef.current = scanner;
 
-          if (!orderSnapshot.exists()) {
-            alert("Auftrag nicht gefunden!");
-            return;
-          }
-
-          const order = orderSnapshot.data();
-          if (!Array.isArray(order.progress)) {
-            alert("Fehler: 'progress' ist kein Array!");
-            return;
-          }
-
-          const progressIndex = order.progress.findIndex(step => !step);
-          if (progressIndex === -1) {
-            alert("Alle Schritte sind bereits abgeschlossen.");
-            return;
-          }
-
-          const updatedProgress = [...order.progress];
-          updatedProgress[progressIndex] = true;
-
-          await updateDoc(orderRef, { progress: updatedProgress });
-
-          setScannedOrder({ ...order, progress: updatedProgress });
-        } catch (error) {
-          console.error("Fehler beim Verarbeiten des Scans:", error);
-        }
-      };
-
-      const handleError = (err) => {
-        console.error("Fehler beim Scannen des QR-Codes:", err);
-      };
-
-      scanner.render(handleScan, handleError);
-      
-      return () => {
+    return () => {
         scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
       };
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
-   
+ const lastScannedOrderRef = useRef(null); // Merkt sich die letzte gescannte ID
 
-    return (
-    <div>
-      <button onClick={toggleScannerVisibility}>
-        {isScannerVisible ? "Scanner ausblenden" : "Scanner anzeigen"}
-      </button>
-      {isScannerVisible && <div id="qr-code-scanner"></div>}
-      {showCheck && <div className="check-animation">✔️</div>}
-    </div>
-  );
+const handleScan = async (data) => {
+  if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
+  lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
+
+  const orderId = data.trim();  
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnapshot = await getDoc(orderRef);
+
+    if (orderSnapshot.exists()) {
+      const order = orderSnapshot.data();
+      console.log("Vorheriger Fortschritt:", order.progress); // Debugging
+
+      // Finde den nächsten offenen Schritt
+      const progressIndex = order.progress.findIndex(step => !step);
+      if (progressIndex !== -1) {
+        const updatedProgress = [...order.progress];
+        updatedProgress[progressIndex] = true;  // Nur einen Schritt auf "erledigt" setzen
+
+        // Auftrag in der Datenbank aktualisieren
+        await updateDoc(orderRef, { progress: updatedProgress });
+
+        // Update im UI
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+
+        console.log("Neuer Fortschritt:", updatedProgress); // Debugging
+      } else {
+        alert("Alle Schritte sind bereits abgeschlossen.");
+      }
+    } else {
+      console.log("Auftrag nicht gefunden!");
+    }
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+    alert("Fehler beim Aktualisieren des Fortschritts.");
+  }
+
+  // Setze eine Verzögerung, bevor wieder gescannt werden kann
+  setTimeout(() => {
+    lastScannedOrderRef.current = null;
+  }, 3000); // 3 Sekunden Sperrzeit für den nächsten Scan
 };
+const handleError = (err) => {
+  console.error("Fehler beim Scannen des QR-Codes:", err);
+  // Optional: Zeige eine Fehlermeldung im UI an
+};
+
+ const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
+  };
   
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
