@@ -98,8 +98,10 @@ const handleScan = async (data) => {
         setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
 
         console.log("Neuer Fortschritt:", updatedProgress); // Debugging
+        setScannedOrder(order);
+  alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
       } else {
-        alert("Alle Schritte sind bereits abgeschlossen.");
+            alert("Alle Schritte sind bereits abgeschlossen.");
       }
     } else {
       console.log("Auftrag nicht gefunden!");
