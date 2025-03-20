@@ -57,7 +57,10 @@ export default function ProductionProgress() {
   const lastScannedOrderRef = useRef(null);
   const [showCheck, setShowCheck] = useState(false);
   const [isScannerVisible, setIsScannerVisible] = useState(false); // Zustand, ob der Scanner sichtbar ist
- 
+
+   const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
+  }; 
      
   useEffect(() => {
     if (isScannerVisible) {
@@ -140,11 +143,7 @@ export default function ProductionProgress() {
     // Optional: Zeige eine Fehlermeldung im UI an
   };
 
-  const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState); // Scanner umschalten
-  };
-
-  return (
+    return (
     <div>
       <button onClick={toggleScannerVisibility}>
         {isScannerVisible ? "Scanner ausblenden" : "Scanner anzeigen"}
