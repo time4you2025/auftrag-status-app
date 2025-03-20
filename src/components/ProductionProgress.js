@@ -70,44 +70,49 @@ export default function ProductionProgress() {
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
- const handleScan = async (data) => {
-  if (data) {
-    setSearchQuery(data);  // Setzt die Suchabfrage auf den gescannten Auftrag
-    const orderId = data;  // Angenommen, der QR-Code enthält direkt die Auftrags-ID
+ const lastScannedOrderRef = useRef(null); // Merkt sich die letzte gescannte ID
 
-    try {
-      // Hole den Auftrag aus der Datenbank
-      const orderRef = doc(db, "orders", orderId);
-      const orderSnapshot = await getDoc(orderRef);
+const handleScan = async (data) => {
+  if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
+  lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
 
-      if (orderSnapshot.exists()) {
-        const order = orderSnapshot.data();
+  const orderId = data.trim();  
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnapshot = await getDoc(orderRef);
 
-        // Finde den nächsten offenen Schritt und aktualisiere den Fortschritt
-        const progressIndex = order.progress.findIndex(step => step === false);
-        if (progressIndex !== -1) {
-          const updatedProgress = [...order.progress];
-          updatedProgress[progressIndex] = true;  // Setzt den nächsten Schritt auf "erledigt"
+    if (orderSnapshot.exists()) {
+      const order = orderSnapshot.data();
+      console.log("Vorheriger Fortschritt:", order.progress); // Debugging
 
-          // Aktualisiere den Auftrag in der Datenbank
-          await updateDoc(orderRef, { progress: updatedProgress });
-          
-          // Update im Frontend
-          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+      // Finde den nächsten offenen Schritt
+      const progressIndex = order.progress.findIndex(step => !step);
+      if (progressIndex !== -1) {
+        const updatedProgress = [...order.progress];
+        updatedProgress[progressIndex] = true;  // Nur einen Schritt auf "erledigt" setzen
 
-          console.log("Fortschritt erfolgreich aktualisiert:", updatedProgress);
-        } else {
-          alert("Alle Schritte sind bereits abgeschlossen.");
-        }
+        // Auftrag in der Datenbank aktualisieren
+        await updateDoc(orderRef, { progress: updatedProgress });
+
+        // Update im UI
+        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+
+        console.log("Neuer Fortschritt:", updatedProgress); // Debugging
       } else {
-        console.log("Auftrag nicht gefunden!");
+        alert("Alle Schritte sind bereits abgeschlossen.");
       }
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-      alert("Fehler beim Aktualisieren des Fortschritts.");
-      handleError(error);  // Verwende die handleError-Funktion, um den Fehler zu verarbeiten
+    } else {
+      console.log("Auftrag nicht gefunden!");
     }
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
+    alert("Fehler beim Aktualisieren des Fortschritts.");
   }
+
+  // Setze eine Verzögerung, bevor wieder gescannt werden kann
+  setTimeout(() => {
+    lastScannedOrderRef.current = null;
+  }, 3000); // 3 Sekunden Sperrzeit für den nächsten Scan
 };
 const handleError = (err) => {
   console.error("Fehler beim Scannen des QR-Codes:", err);
