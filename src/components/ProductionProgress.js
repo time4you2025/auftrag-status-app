@@ -42,7 +42,6 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
