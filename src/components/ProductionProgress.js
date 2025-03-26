@@ -48,7 +48,12 @@ export default function ProductionProgress() {
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
+    if (JSON.stringify(ordersData) !== JSON.stringify(prevOrders)) {
+        return ordersData;
+      }
+      return prevOrders; // Verhindert unnötige State-Änderungen
     });
+  });
 
     // Aufräumen: unsubscribe bei Unmount der Komponente
     return () => unsubscribe();
@@ -241,7 +246,7 @@ const clearSearch = () => {
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       {/* Deine Suchleiste mit dem "X" zum Löschen */}
-      <div className="search-container" style={{ position: "relative", display: "flex", gap: "0.5rem" }}>
+      <div className="search-container" style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
         <Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
