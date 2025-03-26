@@ -112,7 +112,10 @@ export default function ProductionProgress() {
         await updateDoc(orderRef, { progress: updatedProgress });
 
         // Update im UI
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+        setOrders(prev => {
+          const updatedOrders = prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o);
+          return JSON.stringify(updatedOrders) !== JSON.stringify(prev) ? updatedOrders : prev;
+        });
 
         console.log("Neuer Fortschritt:", updatedProgress); // Debugging
         alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
