@@ -70,9 +70,7 @@ export default function ProductionProgress() {
     }
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
- const lastScannedOrderRef = useRef(null); // Merkt sich die letzte gescannte ID
-
-const handleScan = async (data) => {
+ const handleScan = async (data) => {
   if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
   lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
 
