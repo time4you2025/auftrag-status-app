@@ -237,7 +237,7 @@ const clearSearch = () => {
   const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
-    <div className="p-2 bg-green-600 min-h-screen flex flex-col gap-2">
+    <div className="p-2 bg-green-600 min-h-screen flex flex-col gap-0">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="flex gap-0.1 mb-1" style={{ flex: "1 0 auto" }}>
