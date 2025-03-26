@@ -53,8 +53,7 @@ export default function ProductionProgress() {
       }
       return prevOrders; // Verhindert unnötige State-Änderungen
     });
-  });
-
+ 
     // Aufräumen: unsubscribe bei Unmount der Komponente
     return () => unsubscribe();
   }, []);
