@@ -41,6 +41,7 @@ export default function ProductionProgress() {
   const scannerRef = useRef(null);
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
+  const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -75,6 +76,9 @@ const handleScan = async (data) => {
   if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
   lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
 
+ if (lastScannedOrderRef.current === orderId) return;
+  lastScannedOrderRef.current = orderId;
+  
   setScannerActive(false);
   
   const orderId = data.trim();  
@@ -232,8 +236,20 @@ const handleError = (err) => {
           style={{ height: '14px'}}/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen" 
-        className="h-10 text-sm mb-0" />
+       <div className="search-container">
+    <input
+      type="text"
+      value={searchQuery}
+      onChange={(e) => setSearchQuery(e.target.value)}
+      placeholder="Auftragsnummer suchen ..."
+      className="search-input"
+    />
+    {searchQuery && (
+      <button onClick={() => setSearchQuery("")} className="clear-button">
+        ✖
+      </button>
+    )}
+  </div>
       
          {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-2">
