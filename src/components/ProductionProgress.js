@@ -75,6 +75,12 @@ const handleScan = async (data) => {
   lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
 
   const orderId = data.trim();  
+
+  if (!orderId) {
+    alert("Ungültiges QR-Code-Format.");
+    return;
+  }
+  
   try {
     const orderRef = doc(db, "orders", orderId);
     const orderSnapshot = await getDoc(orderRef);
@@ -103,11 +109,28 @@ const handleScan = async (data) => {
             alert("Alle Schritte sind bereits abgeschlossen.");
       }
     } else {
-      console.log("Auftrag nicht gefunden!");
+       const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
+
+      if (!week || isNaN(parseInt(week, 10))) {
+        alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
+        return;
+      }
+
+      const newOrderData = {
+        id: orderId,
+        week: parseInt(week, 10),
+        progress: Array(steps.length).fill(false),
+        remark: ""
+      };
+
+      await setDoc(orderRef, newOrderData);
+      setOrders(prev => [...prev, newOrderData]); // UI aktualisieren
+      setSearchQuery(orderId); // Direkt in der UI anzeigen
+      alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
     }
   } catch (error) {
-    console.error("Fehler beim Aktualisieren des Fortschritts:", error);
-    alert("Fehler beim Aktualisieren des Fortschritts.");
+    console.error("Fehler beim Scannen:", error);
+    alert("Fehler beim Abrufen oder Anlegen des Auftrags.");
   }
 
   // Setze eine Verzögerung, bevor wieder gescannt werden kann
