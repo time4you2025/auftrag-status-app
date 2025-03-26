@@ -71,19 +71,23 @@ export default function ProductionProgress() {
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
  const handleScan = async (data) => {
-  if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
-  lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
-
- if (lastScannedOrderRef.current === orderId) return;
-  lastScannedOrderRef.current = orderId;
-  
-  const orderId = data.trim();  
+  // Die orderId wird sofort nach dem Erhalten des Scans gesetzt
+  const orderId = data.trim();
 
   if (!orderId) {
     alert("Ungültiges QR-Code-Format.");
     return;
   }
-  
+
+  // Verhindern, dass der gleiche Auftrag doppelt gescannt wird
+  if (lastScannedOrderRef.current === orderId) {
+    return; // Ignoriere den Scan, wenn der Auftrag bereits gescannt wurde
+  }
+
+  // Speichere die letzte gescannte ID
+  lastScannedOrderRef.current = orderId;
+
+   
   try {
     const orderRef = doc(db, "orders", orderId);
     const orderSnapshot = await getDoc(orderRef);
