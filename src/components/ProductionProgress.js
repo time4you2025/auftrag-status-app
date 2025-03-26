@@ -234,16 +234,19 @@ const handleError = (err) => {
           style={{ height: '14px'}}/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-       <div className="search-container">
-    <input
-      type="text"
+      <div className="flex gap-0.5 mb-1 relative">
+    <Input
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       placeholder="Auftragsnummer suchen ..."
-      className="search-input"
+      className="p-2 border rounded w-full"
+      style={{ height: '14px' }}
     />
     {searchQuery && (
-      <button onClick={() => setSearchQuery("")} className="clear-button">
+      <button
+        onClick={() => setSearchQuery("")}
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200 p-1 rounded-full"
+      >
         ✖
       </button>
     )}
