@@ -40,6 +40,7 @@ export default function ProductionProgress() {
   const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
   const scannerRef = useRef(null);
   const [isScannerVisible, setIsScannerVisible] = useState(false);
+  const [scannerActive, setScannerActive] = useState(false);
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -74,6 +75,8 @@ const handleScan = async (data) => {
   if (!data || lastScannedOrderRef.current === data) return; // Doppelten Scan verhindern
   lastScannedOrderRef.current = data; // Speichert die zuletzt gescannte ID
 
+  setScannerActive(false);
+  
   const orderId = data.trim();  
 
   if (!orderId) {
@@ -220,7 +223,7 @@ const handleError = (err) => {
 
   return (
     <div className="p-4 grid gap-0.5 bg-green-600 min-h-screen">
-      <h1 className="text-xl font-bold text-white">TIME4YOU - Produktionsstatus -Testversion-</h1>
+      <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="flex gap-0.5 mb-1">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
