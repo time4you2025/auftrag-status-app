@@ -42,6 +42,7 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -76,8 +77,6 @@ export default function ProductionProgress() {
 
  if (lastScannedOrderRef.current === orderId) return;
   lastScannedOrderRef.current = orderId;
-  
-  setScannerActive(false);
   
   const orderId = data.trim();  
 
@@ -175,6 +174,10 @@ const handleError = (err) => {
     }
   };
 
+const clearSearch = () => {
+    setSearchQuery(""); // Löscht den Suchbegriff
+  };
+  
   const toggleStep = async (orderId, index) => {
     const order = orders.find(o => o.id === orderId);
     if (!order || (index > 0 && !order.progress[index - 1])) return;
@@ -234,23 +237,32 @@ const handleError = (err) => {
           style={{ height: '14px'}}/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      <div className="flex gap-0.5 mb-1 relative">
-    <Input
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      placeholder="Auftragsnummer suchen ..."
-      className="p-2 border rounded w-full"
-      style={{ height: '14px' }}
-    />
-    {searchQuery && (
-      <button
-        onClick={() => setSearchQuery("")}
-        className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gray-200 p-1 rounded-full"
-      >
-        ✖
-      </button>
-    )}
-  </div>
+      {/* Deine Suchleiste mit dem "X" zum Löschen */}
+      <div className="search-container" style={{ position: "relative", display: "flex", gap: "0.5rem" }}>
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Auftragsnummer suchen ..."
+          style={{ height: "14px", width: "200px" }}
+        />
+        {/* Das "X", um die Suchzeile zu leeren */}
+        {searchQuery && (
+          <span
+            onClick={clearSearch}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              fontSize: "18px",
+              color: "#999",
+            }}
+          >
+            ✖
+          </span>
+        )}
+      </div>
       
          {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-2">
