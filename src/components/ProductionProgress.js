@@ -83,6 +83,8 @@ const handleScan = async (data) => {
       const order = orderSnapshot.data();
       console.log("Vorheriger Fortschritt:", order.progress); // Debugging
 
+      setSearchQuery(orderId);
+
       // Finde den nächsten offenen Schritt
       const progressIndex = order.progress.findIndex(step => !step);
       if (progressIndex !== -1) {
