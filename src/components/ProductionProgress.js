@@ -42,6 +42,11 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
+  const [areOrdersVisible, setAreOrdersVisible] = useState(false); // Zustand für die Sichtbarkeit der Aufträge
+
+  const toggleOrdersVisibility = () => {
+    setAreOrdersVisible(prevState => !prevState);  // Umschalten der Sichtbarkeit
+  };
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -284,13 +289,16 @@ const clearSearch = () => {
 >
   <Camera size={24} color="white" />
 </Button>
-
-      </div>
-
-       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
+    
+        {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
         <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
+
+  <Button onClick={toggleOrdersVisibility}>
+        {areOrdersVisible ? "Aufträge ausblenden" : "Aufträge anzeigen"}
+      </Button>
+
 
      {/* Anzeige des gescannten Auftrags */}
       {scannedOrder && (
@@ -308,8 +316,10 @@ const clearSearch = () => {
           <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
         </Card>
       )}
-      {SORTED_ORDERS.map((order) => (
-        <Card key={order.id} className="p-2 my-2">
+
+ {/* Aufträge anzeigen, wenn "areOrdersVisible" wahr ist */}
+      {areOrdersVisible && SORTED_ORDERS.map((order) => (
+          <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
             {order.progress.every(step => step) ? (
