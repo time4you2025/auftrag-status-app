@@ -359,6 +359,9 @@ const clearSearch = () => {
         />
         <Button onClick={deleteOrder}>Löschen</Button>
         <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
-      </div>
+          </div>
+        </div>
+      )}
     </div>
-  )}
+  );
+}
