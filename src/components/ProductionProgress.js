@@ -97,12 +97,11 @@ export default function ProductionProgress() {
     const orderSnapshot = await getDoc(orderRef);
 
     if (orderSnapshot.exists()) {
+      setSearchQuery(orderId);
       const order = orderSnapshot.data();
       console.log("Vorheriger Fortschritt:", order.progress); // Debugging
 
-      setSearchQuery(orderId);
-
-      // Finde den nächsten offenen Schritt
+            // Finde den nächsten offenen Schritt
       const progressIndex = order.progress.findIndex(step => !step);
       if (progressIndex !== -1) {
         const updatedProgress = [...order.progress];
@@ -138,8 +137,7 @@ export default function ProductionProgress() {
       };
 
       await setDoc(orderRef, newOrderData);
-      setOrders(prev => [...prev, newOrderData]); // UI aktualisieren
-      setSearchQuery(orderId); // Direkt in der UI anzeigen
+     
       alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
     }
   } catch (error) {
@@ -331,7 +329,7 @@ const clearSearch = () => {
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-2 right-2 p-0.5">
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0">
             <X size={9} />
           </Button>
         </Card>
