@@ -42,6 +42,7 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
+  const [showOrders, setShowOrders] = useState(true); // Neuer Zustand, um die gesamte Liste der Aufträge zu zeigen oder zu verstecken
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -57,6 +58,11 @@ export default function ProductionProgress() {
     // Aufräumen: unsubscribe bei Unmount der Komponente
     return () => unsubscribe();
   }, []);
+
+  const toggleOrdersVisibility = () => {
+    setShowOrders(prev => !prev);
+  };
+  
  useEffect(() => {
     // HTML5-QR-Scanner initialisieren
   if (isScannerVisible) {
@@ -292,6 +298,11 @@ const clearSearch = () => {
         <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
 
+      {/* Button zum Auf- und Zuklappen der gesamten Auftragsliste */}
+      <Button onClick={toggleOrdersVisibility} className="mb-4">
+        {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
+      </Button>
+
      {/* Anzeige des gescannten Auftrags */}
       {scannedOrder && (
         <Card className="p-2 mt-4">
@@ -308,7 +319,7 @@ const clearSearch = () => {
           <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
         </Card>
       )}
-      {SORTED_ORDERS.map((order) => (
+      {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
