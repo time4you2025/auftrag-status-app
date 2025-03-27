@@ -45,15 +45,18 @@ export default function ProductionProgress() {
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
 
   useEffect(() => {
-    // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
-    const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
-      const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setOrders(ordersData);
-    if (JSON.stringify(ordersData) !== JSON.stringify(prevOrders)) {
-        return ordersData;
-      }
-      return prevOrders; // Verhindert unnötige State-Änderungen
+  // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
+  const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
+    const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Prüfe, ob sich die Daten tatsächlich geändert haben
+    setOrders((prevOrders) => {
+      const ordersChanged = ordersData.length !== prevOrders.length || 
+                            !ordersData.every((order, index) => order.id === prevOrders[index].id);
+
+      return ordersChanged ? ordersData : prevOrders;
     });
+  });
  
     // Aufräumen: unsubscribe bei Unmount der Komponente
     return () => unsubscribe();
