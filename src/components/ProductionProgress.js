@@ -53,7 +53,7 @@ export default function ProductionProgress() {
     setOrders((prevOrders) => {
        const newOrders = ordersData.filter(order =>
                         !prevOrders.some(existingOrder => existingOrder.id === order.id)
-
+  );
       return newOrders.length > 0 ? [...prevOrders, ...newOrders] : prevOrders;
     });
   });
