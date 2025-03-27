@@ -47,7 +47,9 @@ export default function ProductionProgress() {
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Auftragsnummer" />
         <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="KW" />
         <Button onClick={addOrder}>Hinzufügen</Button>
-      </div>
+    </div>
+        </div>
+      )}
     </div>
   );
 }
