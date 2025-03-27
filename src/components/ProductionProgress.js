@@ -51,10 +51,10 @@ export default function ProductionProgress() {
 
     // Prüfe, ob sich die Daten tatsächlich geändert haben
     setOrders((prevOrders) => {
-      const ordersChanged = ordersData.length !== prevOrders.length || 
-                            !ordersData.every((order, index) => order.id === prevOrders[index].id);
+       const newOrders = ordersData.filter(order =>
+                        !prevOrders.some(existingOrder => existingOrder.id === order.id)
 
-      return ordersChanged ? ordersData : prevOrders;
+      return newOrders.length > 0 ? [...prevOrders, ...newOrders] : prevOrders;
     });
   });
  
