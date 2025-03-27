@@ -62,6 +62,16 @@ export default function ProductionProgress() {
   const toggleOrdersVisibility = () => {
     setShowOrders(prev => !prev);
   };
+
+useEffect(() => {
+    // Wenn es eine Suchabfrage gibt, setze showOrders auf true
+    if (searchQuery) {
+      setShowOrders(true);
+    } else {
+      setShowOrders(false);
+    }
+  }, [searchQuery]);
+
   
  useEffect(() => {
     // HTML5-QR-Scanner initialisieren
