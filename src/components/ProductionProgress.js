@@ -292,7 +292,7 @@ const clearSearch = () => {
     
         {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
+        <div id="qr-code-scanner" className="my-4"></div> 
       )}
 
   <Button onClick={toggleOrdersVisibility}>
@@ -317,8 +317,7 @@ const clearSearch = () => {
         </Card>
       )}
 
- {/* Aufträge anzeigen, wenn "areOrdersVisible" wahr ist */}
-      {areOrdersVisible && SORTED_ORDERS.map((order) => (
+       {areOrdersVisible && SORTED_ORDERS.map((order) => (
           <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
