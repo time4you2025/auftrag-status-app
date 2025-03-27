@@ -251,7 +251,7 @@ const clearSearch = () => {
     setShowPasswordPrompt(true);
   };
 
-  const filteredOrders = orders.filter(order => order.id === searchQuery);
+  const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
   const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
