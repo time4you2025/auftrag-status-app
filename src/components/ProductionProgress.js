@@ -364,5 +364,4 @@ const clearSearch = () => {
         </div>
       )}
       </div>
-     );
-};
+  );
