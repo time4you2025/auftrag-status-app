@@ -281,87 +281,86 @@ const clearSearch = () => {
         )}
       </div>
       
-         {/* QR-Code-Scanner als Symbol anzeigen */}
-      <div className="my-2">
-        <Button
-  className="bg-blue-500 p-2 rounded-full"
-  onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
->
-  <Camera size={24} color="white" />
-</Button>
-    
-        {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
-      {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div> 
-      )}
+       {/* QR-Code-Scanner als Symbol anzeigen */}
+<div className="my-2">
+  <Button
+    className="bg-blue-500 p-2 rounded-full"
+    onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
+  >
+    <Camera size={24} color="white" />
+  </Button>
+  
+  {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
+  {isScannerVisible && (
+    <div id="qr-code-scanner" className="my-4"></div> 
+  )}
 
   <Button onClick={toggleOrdersVisibility}>
-        {areOrdersVisible ? "Aufträge ausblenden" : "Aufträge anzeigen"}
-      </Button>
+    {areOrdersVisible ? "Aufträge ausblenden" : "Aufträge anzeigen"}
+  </Button>
 
-
-     {/* Anzeige des gescannten Auftrags */}
-      {scannedOrder && (
-        <Card className="p-2 mt-4">
-          <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
-          <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
-          <div className="flex flex-wrap gap-2 mt-2">
-            {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
-          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-        </Card>
-      )}
-
-       {areOrdersVisible && SORTED_ORDERS.map((order) => (
-          <Card key={order.id} className="p-2 my-2">
-          <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
-            {order.progress.every(step => step) ? (
-              <CheckCircle size={20} className="text-green-500" />
-            ) : (
-              <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
-            )}
-          </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
-  className={`
-    ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
-    transition-all duration-300
-  `}
-/>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
-          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
-            <X size={6} />
-          </Button>
-        </Card>
-      ))}
-
-      {showPasswordPrompt && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md shadow-lg">
-            <h3 className="font-bold">Passwort zum Löschen eingeben</h3>
-            <Input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Passwort" 
-            />
-            <Button onClick={deleteOrder}>Löschen</Button>
-            <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
-          </div>
-        </div>
-      )}
+  {/* Anzeige des gescannten Auftrags */}
+  {scannedOrder && (
+    <Card className="p-2 mt-4">
+      <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
+      <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
+      <div className="flex flex-wrap gap-2 mt-2">
+        {steps.map((step, index) => (
+          <label key={index} className="flex items-center gap-1 text-xs">
+            <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
+            {step}
+          </label>
+        ))}
       </div>
-  );
+      <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+    </Card>
+  )}
+
+  {areOrdersVisible && SORTED_ORDERS.map((order) => (
+    <Card key={order.id} className="p-2 my-2">
+      <div className="flex items-center gap-2">
+        <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
+        {order.progress.every(step => step) ? (
+          <CheckCircle size={20} className="text-green-500" />
+        ) : (
+          <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
+        )}
+      </div>
+      <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
+        className={`
+          ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
+          transition-all duration-300
+        `}
+      />
+      <div className="flex flex-wrap gap-2 mt-2">
+        {steps.map((step, index) => (
+          <label key={index} className="flex items-center gap-1 text-xs">
+            <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
+            {step}
+          </label>
+        ))}
+      </div>
+      <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+      <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
+        <X size={6} />
+      </Button>
+    </Card>
+  ))}
+
+  {showPasswordPrompt && (
+    <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+      <div className="bg-white p-4 rounded-md shadow-lg">
+        <h3 className="font-bold">Passwort zum Löschen eingeben</h3>
+        <Input 
+          type="password" 
+          value={password} 
+          onChange={(e) => setPassword(e.target.value)} 
+          placeholder="Passwort" 
+        />
+        <Button onClick={deleteOrder}>Löschen</Button>
+        <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
+      </div>
+    </div>
+  )}
+</div>
+);
