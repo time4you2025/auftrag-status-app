@@ -213,26 +213,13 @@ const clearSearch = () => {
     const updatedProgress = [...order.progress];
     updatedProgress[index] = !updatedProgress[index];
 
-// Holen des aktuellen Zeitstempels
-  const timestamp = new Date().toISOString();
-
-  // Optional: Holen des Benutzernamens (hier Beispiel aus localStorage)
-  const modifiedBy = window.localStorage.getItem("username") || "Unbekannt";
-    
     try {
-    // Auftrag in Firestore aktualisieren
-    await updateDoc(doc(db, "orders", orderId), {
-      progress: updatedProgress,
-      lastModified: timestamp, // Datum und Uhrzeit der Änderung
-      modifiedBy: modifiedBy   // Der Benutzer, der die Änderung vorgenommen hat
-    });
-
-    // Update im UI
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren des Status:", error);
-  }
-};
+      await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+    } catch (error) {
+      console.error("Fehler beim Aktualisieren des Status:", error);
+    }
+  };
 
   const updateRemark = async (orderId, remark) => {
     try {
@@ -370,13 +357,6 @@ const clearSearch = () => {
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
           </Button>
-              {/* Anzeige der letzten Änderung */}
-  {order.lastModified && (
-    <div className="text-xs mt-2">
-      <p>Letzte Änderung: {new Date(order.lastModified).toLocaleString()}</p>
-      <p>Geändert von: {order.modifiedBy}</p>
-    </div>
-  )}
         </Card>
       ))}
 
