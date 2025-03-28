@@ -38,7 +38,7 @@ export default function ProductionProgress() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
-  const [filter, setFilter] = useState("all"); // Filterzustand
+  const scannerRef = useRef(null);
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
@@ -71,11 +71,12 @@ export default function ProductionProgress() {
         fps: 10,
         qrbox: 250,
       });
+
       scanner.render(handleScan, handleError);
-      lastScannedOrderRef.current = scanner;
+      scannerRef.current = scanner;
 
       return () => {
-        scanner.clear(); 
+        scanner.clear();
       };
     }
   }, [isScannerVisible]);
@@ -101,11 +102,14 @@ export default function ProductionProgress() {
       if (orderSnapshot.exists()) {
         setSearchQuery(orderId);
         const order = orderSnapshot.data();
+
         const progressIndex = order.progress.findIndex(step => !step);
         if (progressIndex !== -1) {
           const updatedProgress = [...order.progress];
           updatedProgress[progressIndex] = true;
+
           await updateDoc(orderRef, { progress: updatedProgress });
+
           setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
           alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
         } else {
@@ -113,11 +117,19 @@ export default function ProductionProgress() {
         }
       } else {
         const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
+
         if (!week || isNaN(parseInt(week, 10))) {
           alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
           return;
         }
-        const newOrderData = { id: orderId, week: parseInt(week, 10), progress: Array(steps.length).fill(false), remark: "" };
+
+        const newOrderData = {
+          id: orderId,
+          week: parseInt(week, 10),
+          progress: Array(steps.length).fill(false),
+          remark: ""
+        };
+
         await setDoc(orderRef, newOrderData);
         setSearchQuery(orderId);
         alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
@@ -142,7 +154,13 @@ export default function ProductionProgress() {
 
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
-      const newOrderData = { id: newOrder.trim(), week: parseInt(newWeek, 10), progress: Array(steps.length).fill(false), remark: "" };
+      const newOrderData = {
+        id: newOrder.trim(),
+        week: parseInt(newWeek, 10),
+        progress: Array(steps.length).fill(false),
+        remark: ""
+      };
+
       try {
         const docRef = doc(db, "orders", newOrderData.id);
         await setDoc(docRef, newOrderData);
@@ -158,7 +176,7 @@ export default function ProductionProgress() {
   };
 
   const clearSearch = () => {
-    setSearchQuery(""); 
+    setSearchQuery("");
   };
 
   const toggleStep = async (orderId, index) => {
@@ -206,59 +224,77 @@ export default function ProductionProgress() {
     setShowPasswordPrompt(true);
   };
 
-  const filteredOrders = orders.filter(order => {
-    if (filter === "all") return true;
-    if (filter === "completed" && order.progress.every(step => step)) return true;
-    if (filter === "overdue" && order.week < getCurrentCalendarWeek()) return true;
-    if (filter === "urgent" && order.week === getCurrentCalendarWeek()) return true;
-    return false;
-  });
-
+  const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
   const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
     <div className="p-2 bg-green-600 min-h-screen flex flex-col">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
-      
-      {/* Filter Dropdown */}
-      <div className="mb-4">
-        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="p-2">
-          <option value="all">Alle Aufträge</option>
-          <option value="completed">Erledigte Aufträge</option>
-          <option value="overdue">Überfällige Aufträge</option>
-          <option value="urgent">Eilige Aufträge</option>
-        </select>
-      </div>
-
       <div className="mt-2 mb-2 flex flex-row gap-2">
-        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" style={{ height: '14px' }} />
-        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" style={{ height: '14px' }} />
+        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" style={{ height: '14px'}} />
+        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" style={{ height: '14px'}}/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-
+      {/* Deine Suchleiste mit dem "X" zum Löschen */}
       <div className="search-container" style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
-        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen ..." style={{ height: "14px", width: "200px" }} />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Auftragsnummer suchen ..."
+          style={{ height: "14px", width: "200px" }}
+        />
         {searchQuery && (
-          <span onClick={clearSearch} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "18px", color: "#999" }}>
+          <span
+            onClick={clearSearch}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              cursor: "pointer",
+              fontSize: "18px",
+              color: "#999",
+            }}
+          >
             ✖
           </span>
         )}
       </div>
-
+      {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-2">
-        <Button className="bg-blue-500 p-2 rounded-full" onClick={toggleScannerVisibility}>
+        <Button
+          className="bg-blue-500 p-2 rounded-full"
+          onClick={toggleScannerVisibility}  
+        >
           <Camera size={24} color="white" />
         </Button>
       </div>
 
       {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div>
+        <div id="qr-code-scanner" className="my-4"></div> 
       )}
 
+      {/* Button zum Auf- und Zuklappen der gesamten Auftragsliste */}
       <Button onClick={toggleOrdersVisibility} className="mb-4">
         {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
       </Button>
+
+      {scannedOrder && (
+        <Card className="p-2 mt-4">
+          <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
+          <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
+          <div className="flex flex-wrap gap-2 mt-2">
+            {steps.map((step, index) => (
+              <label key={index} className="flex items-center gap-1 text-xs">
+                <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
+                {step}
+              </label>
+            ))}
+          </div>
+          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+        </Card>
+      )}
 
       {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
@@ -270,27 +306,45 @@ export default function ProductionProgress() {
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
           </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} className={`${(order.progress.filter(Boolean).length / steps.length) * 100 === 100 ? "bg-green-500" : "bg-blue-500"} transition-all duration-300`} />
+          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} className="mt-2" />
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
-              <label key={index} className="flex items-center space-x-2">
+              <label key={index} className="flex items-center gap-1 text-xs">
                 <Checkbox
                   checked={order.progress[index]}
                   onChange={() => toggleStep(order.id, index)}
                 />
-                <span className="text-xs">{step}</span>
+                {step}
               </label>
             ))}
           </div>
-
-          <div className="my-2 flex justify-between">
-            <Button onClick={() => updateRemark(order.id, prompt("Bemerkung eingeben:", order.remark) || "")}>Bemerkung</Button>
-            <Button onClick={() => handleDeleteClick(order.id)} className="bg-red-500">
+          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+          <div className="mt-2 flex justify-end gap-2">
+            <Button variant="destructive" onClick={() => handleDeleteClick(order.id)}>
               Löschen
             </Button>
           </div>
         </Card>
       ))}
+
+      {showPasswordPrompt && (
+        <div className="modal">
+          <h2 className="text-lg font-bold">Passwort eingeben:</h2>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="mt-2"
+          />
+          <div className="flex justify-end mt-2 gap-2">
+            <Button variant="secondary" onClick={() => setShowPasswordPrompt(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={deleteOrder}>Löschen bestätigen</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
