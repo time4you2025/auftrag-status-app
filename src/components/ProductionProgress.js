@@ -45,11 +45,17 @@ export default function ProductionProgress() {
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
 
   useEffect(() => {
+    // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
+    if (JSON.stringify(ordersData) !== JSON.stringify(prevOrders)) {
+        return ordersData;
+      }
+      return prevOrders; // Verhindert unnötige State-Änderungen
     });
-
+ 
+    // Aufräumen: unsubscribe bei Unmount der Komponente
     return () => unsubscribe();
   }, []);
 
@@ -57,7 +63,8 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-  useEffect(() => {
+useEffect(() => {
+    // Wenn es eine Suchabfrage gibt, setze showOrders auf true
     if (searchQuery) {
       setShowOrders(true);
     } else {
@@ -65,93 +72,113 @@ export default function ProductionProgress() {
     }
   }, [searchQuery]);
 
-  useEffect(() => {
-    if (isScannerVisible) {
-      const scanner = new Html5QrcodeScanner("qr-code-scanner", {
-        fps: 10,
-        qrbox: 250,
-      });
+  
+ useEffect(() => {
+    // HTML5-QR-Scanner initialisieren
+  if (isScannerVisible) {
+   const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+      fps: 10,
+      qrbox: 250,
+    });
 
-      scanner.render(handleScan, handleError);
-      scannerRef.current = scanner;
+    scanner.render(handleScan, handleError);
+    scannerRef.current = scanner;
 
-      return () => {
-        scanner.clear();
+    return () => {
+        scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
       };
     }
-  }, [isScannerVisible]);
+  }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
-  const handleScan = async (data) => {
-    const orderId = data.trim();
+ const handleScan = async (data) => {
+  // Die orderId wird sofort nach dem Erhalten des Scans gesetzt
+  const orderId = data.trim();
 
-    if (!orderId) {
-      alert("Ungültiges QR-Code-Format.");
-      return;
-    }
+  if (!orderId) {
+    alert("Ungültiges QR-Code-Format.");
+    return;
+  }
 
-    if (lastScannedOrderRef.current === orderId) {
-      return;
-    }
+  // Verhindern, dass der gleiche Auftrag doppelt gescannt wird
+  if (lastScannedOrderRef.current === orderId) {
+    return; // Ignoriere den Scan, wenn der Auftrag bereits gescannt wurde
+  }
 
-    lastScannedOrderRef.current = orderId;
+  // Speichere die letzte gescannte ID
+  lastScannedOrderRef.current = orderId;
 
-    try {
-      const orderRef = doc(db, "orders", orderId);
-      const orderSnapshot = await getDoc(orderRef);
+   
+  try {
+    const orderRef = doc(db, "orders", orderId);
+    const orderSnapshot = await getDoc(orderRef);
 
-      if (orderSnapshot.exists()) {
-        setSearchQuery(orderId);
-        const order = orderSnapshot.data();
+    if (orderSnapshot.exists()) {
+      setSearchQuery(orderId);
+      const order = orderSnapshot.data();
+      console.log("Vorheriger Fortschritt:", order.progress); // Debugging
 
-        const progressIndex = order.progress.findIndex(step => !step);
-        if (progressIndex !== -1) {
-          const updatedProgress = [...order.progress];
-          updatedProgress[progressIndex] = true;
+            // Finde den nächsten offenen Schritt
+      const progressIndex = order.progress.findIndex(step => !step);
+      if (progressIndex !== -1) {
+        const updatedProgress = [...order.progress];
+        updatedProgress[progressIndex] = true;  // Nur einen Schritt auf "erledigt" setzen
 
-          await updateDoc(orderRef, { progress: updatedProgress });
+        // Auftrag in der Datenbank aktualisieren
+        await updateDoc(orderRef, { progress: updatedProgress });
 
-          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
-          alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
-        } else {
-          alert("Alle Schritte sind bereits abgeschlossen.");
-        }
+       
+        // Update im UI
+        setOrders(prev => {
+          const updatedOrders = prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o);
+          return JSON.stringify(updatedOrders) !== JSON.stringify(prev) ? updatedOrders : prev;
+        });
+
+        console.log("Neuer Fortschritt:", updatedProgress); // Debugging
+        alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
       } else {
-        const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
-
-        if (!week || isNaN(parseInt(week, 10))) {
-          alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
-          return;
-        }
-
-        const newOrderData = {
-          id: orderId,
-          week: parseInt(week, 10),
-          progress: Array(steps.length).fill(false),
-          remark: ""
-        };
-
-        await setDoc(orderRef, newOrderData);
-        setSearchQuery(orderId);
-        alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
+            alert("Alle Schritte sind bereits abgeschlossen.");
       }
-    } catch (error) {
-      console.error("Fehler beim Scannen:", error);
-      alert("Fehler beim Abrufen oder Anlegen des Auftrags.");
+    } else {
+       const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
+
+      if (!week || isNaN(parseInt(week, 10))) {
+        alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
+        return;
+      }
+
+      const newOrderData = {
+        id: orderId,
+        week: parseInt(week, 10),
+        progress: Array(steps.length).fill(false),
+        remark: ""
+      };
+
+      await setDoc(orderRef, newOrderData);
+  
+      // Direkt in die Suchleiste übernehmen, damit er sofort sichtbar ist
+      setSearchQuery(orderId);
+      
+      alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
     }
+  } catch (error) {
+    console.error("Fehler beim Scannen:", error);
+    alert("Fehler beim Abrufen oder Anlegen des Auftrags.");
+  }
 
-    setTimeout(() => {
-      lastScannedOrderRef.current = null;
-    }, 3000);
+  // Setze eine Verzögerung, bevor wieder gescannt werden kann
+  setTimeout(() => {
+    lastScannedOrderRef.current = null;
+  }, 3000); // 3 Sekunden Sperrzeit für den nächsten Scan
+};
+const handleError = (err) => {
+  console.error("Fehler beim Scannen des QR-Codes:", err);
+  // Optional: Zeige eine Fehlermeldung im UI an
+};
+
+ const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
   };
-
-  const handleError = (err) => {
-    console.error("Fehler beim Scannen des QR-Codes:", err);
-  };
-
-  const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState);
-  };
-
+  
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
       const newOrderData = {
@@ -175,10 +202,10 @@ export default function ProductionProgress() {
     }
   };
 
-  const clearSearch = () => {
-    setSearchQuery("");
+const clearSearch = () => {
+    setSearchQuery(""); // Löscht den Suchbegriff
   };
-
+  
   const toggleStep = async (orderId, index) => {
     const order = orders.find(o => o.id === orderId);
     if (!order || (index > 0 && !order.progress[index - 1])) return;
@@ -232,8 +259,10 @@ export default function ProductionProgress() {
       <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
       <div className="mt-2 mb-2 flex flex-row gap-2">
-        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" style={{ height: '14px'}} />
-        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" style={{ height: '14px'}}/>
+        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
+        style={{ height: '14px'}} />
+        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" 
+          style={{ height: '14px'}}/>
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
       {/* Deine Suchleiste mit dem "X" zum Löschen */}
@@ -244,6 +273,7 @@ export default function ProductionProgress() {
           placeholder="Auftragsnummer suchen ..."
           style={{ height: "14px", width: "200px" }}
         />
+        {/* Das "X", um die Suchzeile zu leeren */}
         {searchQuery && (
           <span
             onClick={clearSearch}
@@ -261,18 +291,21 @@ export default function ProductionProgress() {
           </span>
         )}
       </div>
-      {/* QR-Code-Scanner als Symbol anzeigen */}
+      
+         {/* QR-Code-Scanner als Symbol anzeigen */}
       <div className="my-2">
         <Button
-          className="bg-blue-500 p-2 rounded-full"
-          onClick={toggleScannerVisibility}  
-        >
-          <Camera size={24} color="white" />
-        </Button>
+  className="bg-blue-500 p-2 rounded-full"
+  onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
+>
+  <Camera size={24} color="white" />
+</Button>
+
       </div>
 
+       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div> 
+        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
 
       {/* Button zum Auf- und Zuklappen der gesamten Auftragsliste */}
@@ -280,6 +313,7 @@ export default function ProductionProgress() {
         {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
       </Button>
 
+     {/* Anzeige des gescannten Auftrags */}
       {scannedOrder && (
         <Card className="p-2 mt-4">
           <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
@@ -295,7 +329,6 @@ export default function ProductionProgress() {
           <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
         </Card>
       )}
-
       {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
@@ -306,41 +339,39 @@ export default function ProductionProgress() {
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
           </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} className="mt-2" />
+          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
+  className={`
+    ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
+    transition-all duration-300
+  `}
+/>
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
               <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox
-                  checked={order.progress[index]}
-                  onChange={() => toggleStep(order.id, index)}
-                />
+                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
                 {step}
               </label>
             ))}
           </div>
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <div className="mt-2 flex justify-end gap-2">
-            <Button variant="destructive" onClick={() => handleDeleteClick(order.id)}>
-              Löschen
-            </Button>
-          </div>
+          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
+            <X size={6} />
+          </Button>
         </Card>
       ))}
 
       {showPasswordPrompt && (
-        <div className="modal">
-          <h2 className="text-lg font-bold">Passwort eingeben:</h2>
-          <Input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="mt-2"
-          />
-          <div className="flex justify-end mt-2 gap-2">
-            <Button variant="secondary" onClick={() => setShowPasswordPrompt(false)}>
-              Abbrechen
-            </Button>
-            <Button onClick={deleteOrder}>Löschen bestätigen</Button>
+        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-white p-4 rounded-md shadow-lg">
+            <h3 className="font-bold">Passwort zum Löschen eingeben</h3>
+            <Input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="Passwort" 
+            />
+            <Button onClick={deleteOrder}>Löschen</Button>
+            <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
           </div>
         </div>
       )}
