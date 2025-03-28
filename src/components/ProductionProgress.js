@@ -9,7 +9,7 @@ import { collection, onSnapshot, getDocs, doc, setDoc, updateDoc, deleteDoc, get
 import { db } from "../firebaseConfig";
 import { Html5QrcodeScanner } from "html5-qrcode"; // Importiere den QR-Reader 
 
-const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "Fakturiert"];
+const steps = ["AB versendet", "im Druck", "Druck abgeschlossen", "fertig produziert", "verpackt und versandbereit"];
 
 function getCurrentCalendarWeek() {
   const now = new Date();
@@ -326,7 +326,7 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
+          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-12 text-xs" />
         </Card>
       )}
       {showOrders && SORTED_ORDERS.map((order) => (
@@ -353,7 +353,7 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-8 text-xs" />
+          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-12 text-xs" />
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
           </Button>
