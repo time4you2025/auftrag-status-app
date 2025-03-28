@@ -353,7 +353,7 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-12 text-xs" />
+          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-12 text-xs" />
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
           </Button>
