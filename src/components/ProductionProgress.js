@@ -38,24 +38,18 @@ export default function ProductionProgress() {
   const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [scannedOrder, setScannedOrder] = useState(null); // Zustand für gescannten Auftrag
-  const scannerRef = useRef(null);
+  const [filter, setFilter] = useState("all"); // Filterzustand
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
 
   useEffect(() => {
-    // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
     const unsubscribe = onSnapshot(collection(db, "orders"), (snapshot) => {
       const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setOrders(ordersData);
-    if (JSON.stringify(ordersData) !== JSON.stringify(prevOrders)) {
-        return ordersData;
-      }
-      return prevOrders; // Verhindert unnötige State-Änderungen
     });
- 
-    // Aufräumen: unsubscribe bei Unmount der Komponente
+
     return () => unsubscribe();
   }, []);
 
@@ -63,8 +57,7 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-useEffect(() => {
-    // Wenn es eine Suchabfrage gibt, setze showOrders auf true
+  useEffect(() => {
     if (searchQuery) {
       setShowOrders(true);
     } else {
@@ -72,122 +65,84 @@ useEffect(() => {
     }
   }, [searchQuery]);
 
-  
- useEffect(() => {
-    // HTML5-QR-Scanner initialisieren
-  if (isScannerVisible) {
-   const scanner = new Html5QrcodeScanner("qr-code-scanner", {
-      fps: 10,
-      qrbox: 250,
-    });
+  useEffect(() => {
+    if (isScannerVisible) {
+      const scanner = new Html5QrcodeScanner("qr-code-scanner", {
+        fps: 10,
+        qrbox: 250,
+      });
+      scanner.render(handleScan, handleError);
+      lastScannedOrderRef.current = scanner;
 
-    scanner.render(handleScan, handleError);
-    scannerRef.current = scanner;
-
-    return () => {
-        scanner.clear(); // Scanner nach dem Verlassen der Komponente stoppen
+      return () => {
+        scanner.clear(); 
       };
     }
-  }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
+  }, [isScannerVisible]);
 
- const handleScan = async (data) => {
-  // Die orderId wird sofort nach dem Erhalten des Scans gesetzt
-  const orderId = data.trim();
+  const handleScan = async (data) => {
+    const orderId = data.trim();
 
-  if (!orderId) {
-    alert("Ungültiges QR-Code-Format.");
-    return;
-  }
+    if (!orderId) {
+      alert("Ungültiges QR-Code-Format.");
+      return;
+    }
 
-  // Verhindern, dass der gleiche Auftrag doppelt gescannt wird
-  if (lastScannedOrderRef.current === orderId) {
-    return; // Ignoriere den Scan, wenn der Auftrag bereits gescannt wurde
-  }
+    if (lastScannedOrderRef.current === orderId) {
+      return;
+    }
 
-  // Speichere die letzte gescannte ID
-  lastScannedOrderRef.current = orderId;
+    lastScannedOrderRef.current = orderId;
 
-   
-  try {
-    const orderRef = doc(db, "orders", orderId);
-    const orderSnapshot = await getDoc(orderRef);
+    try {
+      const orderRef = doc(db, "orders", orderId);
+      const orderSnapshot = await getDoc(orderRef);
 
-    if (orderSnapshot.exists()) {
-      setSearchQuery(orderId);
-      const order = orderSnapshot.data();
-      console.log("Vorheriger Fortschritt:", order.progress); // Debugging
-
-            // Finde den nächsten offenen Schritt
-      const progressIndex = order.progress.findIndex(step => !step);
-      if (progressIndex !== -1) {
-        const updatedProgress = [...order.progress];
-        updatedProgress[progressIndex] = true;  // Nur einen Schritt auf "erledigt" setzen
-
-        // Auftrag in der Datenbank aktualisieren
-        await updateDoc(orderRef, { progress: updatedProgress });
-
-       
-        // Update im UI
-        setOrders(prev => {
-          const updatedOrders = prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o);
-          return JSON.stringify(updatedOrders) !== JSON.stringify(prev) ? updatedOrders : prev;
-        });
-
-        console.log("Neuer Fortschritt:", updatedProgress); // Debugging
-        alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
+      if (orderSnapshot.exists()) {
+        setSearchQuery(orderId);
+        const order = orderSnapshot.data();
+        const progressIndex = order.progress.findIndex(step => !step);
+        if (progressIndex !== -1) {
+          const updatedProgress = [...order.progress];
+          updatedProgress[progressIndex] = true;
+          await updateDoc(orderRef, { progress: updatedProgress });
+          setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
+          alert(`Erfolgreich gescannt: Auftrag ${orderId} (KW ${order.week})`);
+        } else {
+          alert("Alle Schritte sind bereits abgeschlossen.");
+        }
       } else {
-            alert("Alle Schritte sind bereits abgeschlossen.");
+        const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
+        if (!week || isNaN(parseInt(week, 10))) {
+          alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
+          return;
+        }
+        const newOrderData = { id: orderId, week: parseInt(week, 10), progress: Array(steps.length).fill(false), remark: "" };
+        await setDoc(orderRef, newOrderData);
+        setSearchQuery(orderId);
+        alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
       }
-    } else {
-       const week = prompt(`Auftrag ${orderId} nicht gefunden. Bitte Kalenderwoche eingeben:`);
-
-      if (!week || isNaN(parseInt(week, 10))) {
-        alert("Ungültige Eingabe. Auftrag wurde nicht angelegt.");
-        return;
-      }
-
-      const newOrderData = {
-        id: orderId,
-        week: parseInt(week, 10),
-        progress: Array(steps.length).fill(false),
-        remark: ""
-      };
-
-      await setDoc(orderRef, newOrderData);
-  
-      // Direkt in die Suchleiste übernehmen, damit er sofort sichtbar ist
-      setSearchQuery(orderId);
-      
-      alert(`Neuer Auftrag ${orderId} (KW ${week}) wurde angelegt.`);
+    } catch (error) {
+      console.error("Fehler beim Scannen:", error);
+      alert("Fehler beim Abrufen oder Anlegen des Auftrags.");
     }
-  } catch (error) {
-    console.error("Fehler beim Scannen:", error);
-    alert("Fehler beim Abrufen oder Anlegen des Auftrags.");
-  }
 
-  // Setze eine Verzögerung, bevor wieder gescannt werden kann
-  setTimeout(() => {
-    lastScannedOrderRef.current = null;
-  }, 3000); // 3 Sekunden Sperrzeit für den nächsten Scan
-};
-const handleError = (err) => {
-  console.error("Fehler beim Scannen des QR-Codes:", err);
-  // Optional: Zeige eine Fehlermeldung im UI an
-};
-
- const toggleScannerVisibility = () => {
-    setIsScannerVisible(prevState => !prevState);  // Scanner umschalten
+    setTimeout(() => {
+      lastScannedOrderRef.current = null;
+    }, 3000);
   };
-  
+
+  const handleError = (err) => {
+    console.error("Fehler beim Scannen des QR-Codes:", err);
+  };
+
+  const toggleScannerVisibility = () => {
+    setIsScannerVisible(prevState => !prevState);
+  };
+
   const addOrder = async () => {
     if (newOrder.trim() !== "" && newWeek.trim() !== "") {
-      const newOrderData = {
-        id: newOrder.trim(),
-        week: parseInt(newWeek, 10),
-        progress: Array(steps.length).fill(false),
-        remark: ""
-      };
-
+      const newOrderData = { id: newOrder.trim(), week: parseInt(newWeek, 10), progress: Array(steps.length).fill(false), remark: "" };
       try {
         const docRef = doc(db, "orders", newOrderData.id);
         await setDoc(docRef, newOrderData);
@@ -202,10 +157,10 @@ const handleError = (err) => {
     }
   };
 
-const clearSearch = () => {
-    setSearchQuery(""); // Löscht den Suchbegriff
+  const clearSearch = () => {
+    setSearchQuery(""); 
   };
-  
+
   const toggleStep = async (orderId, index) => {
     const order = orders.find(o => o.id === orderId);
     if (!order || (index > 0 && !order.progress[index - 1])) return;
@@ -251,84 +206,60 @@ const clearSearch = () => {
     setShowPasswordPrompt(true);
   };
 
-  const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
+  const filteredOrders = orders.filter(order => {
+    if (filter === "all") return true;
+    if (filter === "completed" && order.progress.every(step => step)) return true;
+    if (filter === "overdue" && order.week < getCurrentCalendarWeek()) return true;
+    if (filter === "urgent" && order.week === getCurrentCalendarWeek()) return true;
+    return false;
+  });
+
   const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
     <div className="p-2 bg-green-600 min-h-screen flex flex-col">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
+      
+      {/* Filter Dropdown */}
+      <div className="mb-4">
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} className="p-2">
+          <option value="all">Alle Aufträge</option>
+          <option value="completed">Erledigte Aufträge</option>
+          <option value="overdue">Überfällige Aufträge</option>
+          <option value="urgent">Eilige Aufträge</option>
+        </select>
+      </div>
+
       <div className="mt-2 mb-2 flex flex-row gap-2">
-        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
-        style={{ height: '14px'}} />
-        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" 
-          style={{ height: '14px'}}/>
+        <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer" style={{ height: '14px' }} />
+        <Input value={newWeek} onChange={(e) => setNewWeek(e.target.value)} placeholder="Kalenderwoche" style={{ height: '14px' }} />
         <Button onClick={addOrder}>Hinzufügen</Button>
       </div>
-      {/* Deine Suchleiste mit dem "X" zum Löschen */}
+
       <div className="search-container" style={{ position: "relative", display: "flex", alignItems: "center", width: "100%" }}>
-        <Input
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Auftragsnummer suchen ..."
-          style={{ height: "14px", width: "200px" }}
-        />
-        {/* Das "X", um die Suchzeile zu leeren */}
+        <Input value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Auftragsnummer suchen ..." style={{ height: "14px", width: "200px" }} />
         {searchQuery && (
-          <span
-            onClick={clearSearch}
-            style={{
-              position: "absolute",
-              right: "10px",
-              top: "50%",
-              transform: "translateY(-50%)",
-              cursor: "pointer",
-              fontSize: "18px",
-              color: "#999",
-            }}
-          >
+          <span onClick={clearSearch} style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", cursor: "pointer", fontSize: "18px", color: "#999" }}>
             ✖
           </span>
         )}
       </div>
-      
-         {/* QR-Code-Scanner als Symbol anzeigen */}
-      <div className="my-2">
-        <Button
-  className="bg-blue-500 p-2 rounded-full"
-  onClick={toggleScannerVisibility}  // Nutze die toggleScannerVisibility Funktion
->
-  <Camera size={24} color="white" />
-</Button>
 
+      <div className="my-2">
+        <Button className="bg-blue-500 p-2 rounded-full" onClick={toggleScannerVisibility}>
+          <Camera size={24} color="white" />
+        </Button>
       </div>
 
-       {/* QR-Code-Scanner anzeigen, wenn sichtbar */}
       {isScannerVisible && (
-        <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
+        <div id="qr-code-scanner" className="my-4"></div>
       )}
 
-      {/* Button zum Auf- und Zuklappen der gesamten Auftragsliste */}
       <Button onClick={toggleOrdersVisibility} className="mb-4">
         {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
       </Button>
 
-     {/* Anzeige des gescannten Auftrags */}
-      {scannedOrder && (
-        <Card className="p-2 mt-4">
-          <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
-          <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
-          <div className="flex flex-wrap gap-2 mt-2">
-            {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
-          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-        </Card>
-      )}
       {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
@@ -339,42 +270,27 @@ const clearSearch = () => {
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
           </div>
-          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
-  className={`
-    ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
-    transition-all duration-300
-  `}
-/>
+          <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100} className={`${(order.progress.filter(Boolean).length / steps.length) * 100 === 100 ? "bg-green-500" : "bg-blue-500"} transition-all duration-300`} />
           <div className="flex flex-wrap gap-2 mt-2">
             {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
-                {step}
+              <label key={index} className="flex items-center space-x-2">
+                <Checkbox
+                  checked={order.progress[index]}
+                  onChange={() => toggleStep(order.id, index)}
+                />
+                <span className="text-xs">{step}</span>
               </label>
             ))}
           </div>
-          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-2 text-xs" />
-          <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
-            <X size={6} />
-          </Button>
+
+          <div className="my-2 flex justify-between">
+            <Button onClick={() => updateRemark(order.id, prompt("Bemerkung eingeben:", order.remark) || "")}>Bemerkung</Button>
+            <Button onClick={() => handleDeleteClick(order.id)} className="bg-red-500">
+              Löschen
+            </Button>
+          </div>
         </Card>
       ))}
-
-      {showPasswordPrompt && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-4 rounded-md shadow-lg">
-            <h3 className="font-bold">Passwort zum Löschen eingeben</h3>
-            <Input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              placeholder="Passwort" 
-            />
-            <Button onClick={deleteOrder}>Löschen</Button>
-            <Button onClick={() => setShowPasswordPrompt(false)} variant="secondary">Abbrechen</Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
