@@ -191,7 +191,6 @@ const handleError = (err) => {
       try {
         const docRef = doc(db, "orders", newOrderData.id);
         await setDoc(docRef, newOrderData);
-        setOrders((prev) => [...prev, { ...newOrderData, id: docRef.id }]);
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
