@@ -191,6 +191,7 @@ const handleError = (err) => {
       try {
         const docRef = doc(db, "orders", newOrderData.id);
         await setDoc(docRef, newOrderData);
+        setSearchQuery(newOrderData.id);
         setNewOrder("");
         setNewWeek("");
       } catch (error) {
