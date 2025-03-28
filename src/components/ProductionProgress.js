@@ -63,15 +63,6 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-const toggleUrgent = async (orderId, isUrgent) => {
-    try {
-      await updateDoc(doc(db, "orders", orderId), { urgent: !isUrgent });
-      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, urgent: !isUrgent } : o));
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren der Dringlichkeit:", error);
-    }
-  };
-  
 useEffect(() => {
     // Wenn es eine Suchabfrage gibt, setze showOrders auf true
     if (searchQuery) {
@@ -261,7 +252,7 @@ const clearSearch = () => {
   };
 
   const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
-  const sortedOrders = [...filteredOrders].sort((a, b) => b.urgent - a.urgent || a.id.localeCompare(b.id, undefined, { numeric: true }));
+  const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
     <div className="p-2 bg-green-600 min-h-screen flex flex-col">
@@ -366,10 +357,6 @@ const clearSearch = () => {
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
           </Button>
-         <div className="flex items-center gap-2 mt-2">
-            <Checkbox checked={order.urgent} onChange={() => toggleUrgent(order.id, order.urgent)} />
-            <span className="text-xs font-bold">Eilig</span>
-          </div>
         </Card>
       ))}
 
