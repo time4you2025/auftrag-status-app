@@ -43,6 +43,7 @@ export default function ProductionProgress() {
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
+  const [isUrgent, setIsUrgent] = useState(false);
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -353,7 +354,16 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-4 text-xs" />
+<div className="flex items-center gap-2 mt-4">
+  <label className="flex items-center gap-1 text-xs">
+    <Checkbox 
+      checked={isUrgent} 
+      onChange={() => setIsUrgent(prevState => !prevState)} 
+    />
+    Eilig
+  </label>
+</div>
+          <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" className="mt-8 text-xs" />
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
           </Button>
