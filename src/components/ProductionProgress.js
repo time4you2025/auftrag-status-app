@@ -326,7 +326,7 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" className="mt-12 text-xs" />
+          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-12 text-xs" />
         </Card>
       )}
       {showOrders && SORTED_ORDERS.map((order) => (
