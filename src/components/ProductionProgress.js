@@ -91,7 +91,6 @@ useEffect(() => {
   }, [isScannerVisible]); // Nur ausführen, wenn isScannerVisible auf true gesetzt ist
 
  const handleScan = async (data) => {
-  // Die orderId wird sofort nach dem Erhalten des Scans gesetzt
   const orderId = data.trim();
 
   if (!orderId) {
@@ -313,22 +312,6 @@ const clearSearch = () => {
         {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
       </Button>
 
-     {/* Anzeige des gescannten Auftrags */}
-      {scannedOrder && (
-        <Card className="p-2 mt-4">
-          <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
-          <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
-          <div className="flex flex-wrap gap-2 mt-2">
-            {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
-          <Input value={scannedOrder.remark} onChange={(e) => updateRemark(scannedOrder.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-12 text-xs" />
-        </Card>
-      )}
       {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
