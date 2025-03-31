@@ -63,15 +63,6 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-const toggleUrgent = async (orderId, isUrgent) => {
-    try {
-      await updateDoc(doc(db, "orders", orderId), { urgent: isUrgent });
-      setOrders(prev => prev.map(order => order.id === orderId ? { ...order, urgent: isUrgent } : order));
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Eilig-Status:", error);
-    }
-  };
-  
 useEffect(() => {
     // Wenn es eine Suchabfrage gibt, setze showOrders auf true
     if (searchQuery) {
@@ -267,12 +258,6 @@ const clearSearch = () => {
     <div className="p-2 bg-green-600 min-h-screen flex flex-col">
       <h1 className="text-xl font-bold text-white">TIME4YOU - Auftragsüberwachung -Testversion-</h1>
       <h2 className="text-lg font-bold text-white">Aktuelle KW: {getCurrentCalendarWeek()}</h2>
-      {order.urgent && <span className="text-red-500 font-bold">EILIG</span>}
-          </div>
-          <div className="flex items-center gap-1 mb-2">
-            <Checkbox checked={order.urgent || false} onChange={() => toggleUrgent(order.id, !order.urgent)} />
-            <span className="text-xs">Eilig</span>
-          </div>
       <div className="mt-2 mb-2 flex flex-row gap-2">
         <Input value={newOrder} onChange={(e) => setNewOrder(e.target.value)} placeholder="Neue Auftragsnummer"
         style={{ height: '14px'}} />
