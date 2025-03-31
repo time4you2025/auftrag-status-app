@@ -212,6 +212,8 @@ const clearSearch = () => {
     const updatedProgress = [...order.progress];
     updatedProgress[index] = !updatedProgress[index];
 
+    const updatedDateChanged = [...(order.dateChanged || new Array(order.progress.length).fill(null))];
+
     const updatedDateChanged = [...(order.dateChanged || [])];
     if (updatedProgress[index]) {
     updatedDateChanged[index] = new Date().toISOString(); // Setze das aktuelle Datum
@@ -220,7 +222,10 @@ const clearSearch = () => {
     }
 
     try {
-      await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+      await updateDoc(doc(db, "orders", orderId), { 
+        progress: updatedProgress,
+        dateChanged: updatedDateChanged
+      });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Status:", error);
