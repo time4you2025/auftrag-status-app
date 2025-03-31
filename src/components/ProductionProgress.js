@@ -107,20 +107,6 @@ useEffect(() => {
   // Speichere die letzte gescannte ID
   lastScannedOrderRef.current = orderId;
 
-   const toggleEilig = async (orderId) => {
-  const order = orders.find(o => o.id === orderId);
-  if (!order) return;
-
-  const updatedOrder = { ...order, eilig: !order.eilig };
-
-  try {
-    await updateDoc(doc(db, "orders", orderId), { eilig: updatedOrder.eilig });
-    setOrders(prev => prev.map(o => o.id === orderId ? updatedOrder : o));
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren der Eilig-Checkbox:", error);
-  }
-};
-
    
   try {
     const orderRef = doc(db, "orders", orderId);
@@ -199,8 +185,7 @@ const handleError = (err) => {
         id: newOrder.trim(),
         week: parseInt(newWeek, 10),
         progress: Array(steps.length).fill(false),
-        remark: "",
-        eilig: false,
+        remark: ""
       };
 
       try {
@@ -334,10 +319,6 @@ const clearSearch = () => {
           <h2 className="text-sm font-bold">{scannedOrder.id} (KW {scannedOrder.week})</h2>
           <Progress value={(scannedOrder.progress.filter(Boolean).length / steps.length) * 100} />
           <div className="flex flex-wrap gap-2 mt-2">
-          <label className="flex items-center gap-1 text-xs">
-            <Checkbox checked={scannedOrder?.eilig} onChange={() => toggleEilig(scannedOrder.id)} />
-            Eilig
-          </label>  
             {steps.map((step, index) => (
               <label key={index} className="flex items-center gap-1 text-xs">
                 <Checkbox checked={scannedOrder.progress[index]} onChange={() => toggleStep(scannedOrder.id, index)} />
