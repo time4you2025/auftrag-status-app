@@ -214,8 +214,7 @@ const clearSearch = () => {
 
     const updatedDateChanged = [...(order.dateChanged || new Array(order.progress.length).fill(null))];
 
-    const updatedDateChanged = [...(order.dateChanged || [])];
-    if (updatedProgress[index]) {
+   if (updatedProgress[index]) {
     updatedDateChanged[index] = new Date().toISOString(); // Setze das aktuelle Datum
     } else {
     updatedDateChanged[index] = null; // Setze das Datum zurück, wenn der Schritt wieder rückgängig gemacht wird
