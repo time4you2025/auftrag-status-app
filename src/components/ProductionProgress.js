@@ -212,6 +212,13 @@ const clearSearch = () => {
     const updatedProgress = [...order.progress];
     updatedProgress[index] = !updatedProgress[index];
 
+    const updatedDateChanged = [...(order.dateChanged || [])];
+    if (updatedProgress[index]) {
+    updatedDateChanged[index] = new Date().toISOString(); // Setze das aktuelle Datum
+    } else {
+    updatedDateChanged[index] = null; // Setze das Datum zurück, wenn der Schritt wieder rückgängig gemacht wird
+    }
+
     try {
       await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
@@ -328,14 +335,23 @@ const clearSearch = () => {
     transition-all duration-300
   `}
 />
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-col gap-2 mt-2">
             {steps.map((step, index) => (
-              <label key={index} className="flex items-center gap-1 text-xs">
-                <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
-                {step}
-              </label>
-            ))}
-          </div>
+              <div key={index} className="flex items-center gap-1 text-xs">
+                <Checkbox 
+                    checked={order.progress[index]} 
+                    onChange={() => toggleStep(order.id, index)}
+                />
+               <span>{step}</span>
+              {order.progress[index] && order.dateChanged[index] && (
+        <span className="ml-2 text-gray-500 text-xs">
+          (Änderungsdatum: {new Date(order.dateChanged[index]).toLocaleDateString()})
+        </span>
+            )}
+    </div>
+  ))}
+</div>
+              
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-12 text-xs" />
           <Button onClick={() => handleDeleteClick(order.id)} className="absolute bottom-1 right-2 p-0 h-auto w-auto m-0">
             <X size={6} />
