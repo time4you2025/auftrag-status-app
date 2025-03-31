@@ -92,7 +92,7 @@ useEffect(() => {
 
  const handleScan = async (data) => {
   const orderId = data.trim();
-
+  
   if (!orderId) {
     alert("Ungültiges QR-Code-Format.");
     return;
