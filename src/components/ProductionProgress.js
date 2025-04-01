@@ -328,7 +328,7 @@ const clearSearch = () => {
     transition-all duration-300
   `}
 />
-          <div className="flex flex-col gap-2 mt-2">
+          <div className="flex flex-col gap-8 mt-2">
             {steps.map((step, index) => (
               <label key={index} className="flex items-center gap-1 text-xs">
                 <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
