@@ -3,7 +3,7 @@ import React from "react";
 export function Card({ children, className, statusColor }) {
   return (
     <div className={`bg-white rounded-lg shadow-md p-4 ${className} relative`}
-    style={{height: '150px'}}
+    style={{height: '250px'}}
     >
       {/* Status Punkt */}
       <div
