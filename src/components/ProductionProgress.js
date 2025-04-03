@@ -43,6 +43,7 @@ export default function ProductionProgress() {
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
+  const [sortedOrders, setSortedOrders] = useState(SORTED_ORDERS);
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -68,14 +69,13 @@ const toggleUrgent = async (orderId) => {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
 
-  const updatedUrgent = !order.isUrgent; // Toggle 'Eilig' Status
-  try {
-    await updateDoc(doc(db, "orders", orderId), { isUrgent: updatedUrgent });
-    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isUrgent: updatedUrgent } : o));
-  } catch (error) {
-    console.error("Fehler beim Aktualisieren des 'Eilig'-Status:", error);
-  }
-};
+  const toggleUrgency = (orderId, isUrgent) => {
+    const updatedOrders = sortedOrders.map(order => 
+      order.id === orderId ? { ...order, isUrgent } : order
+    );
+    setSortedOrders(updatedOrders);
+  };
+
   
 useEffect(() => {
     // Wenn es eine Suchabfrage gibt, setze showOrders auf true
