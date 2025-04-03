@@ -64,17 +64,22 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-// Checkbox für 'Eilig' hinzufügen und den Status speichern
-const toggleUrgent = async (orderId) => {
+// Funktion, die den 'Eilig'-Status umschaltet
+const toggleUrgency = (orderId, isUrgent) => {
+  const updatedOrders = sortedOrders.map(order => 
+    order.id === orderId ? { ...order, isUrgent } : order
+  );
+  setSortedOrders(updatedOrders);
+};
+
+// Funktion zum Aufruf von toggleUrgency
+const handleToggleUrgency = async (orderId) => {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
 
-  const toggleUrgency = (orderId, isUrgent) => {
-    const updatedOrders = sortedOrders.map(order => 
-      order.id === orderId ? { ...order, isUrgent } : order
-    );
-    setSortedOrders(updatedOrders);
-  };
+  const isUrgent = !order.isUrgent;  // Toggle der aktuellen Urgency
+  toggleUrgency(orderId, isUrgent);  // Aufruf der Funktion zur Statusaktualisierung
+};
 
   
 useEffect(() => {
