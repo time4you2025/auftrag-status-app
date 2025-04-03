@@ -43,7 +43,6 @@ export default function ProductionProgress() {
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
-  const [sortedOrders, setSortedOrders] = useState(SORTED_ORDERS);
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -64,23 +63,19 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
-// Funktion, die den 'Eilig'-Status umschaltet
-const toggleUrgency = (orderId, isUrgent) => {
-  const updatedOrders = sortedOrders.map(order => 
-    order.id === orderId ? { ...order, isUrgent } : order
-  );
-  setSortedOrders(updatedOrders);
-};
-
-// Funktion zum Aufruf von toggleUrgency
-const handleToggleUrgency = async (orderId) => {
+// Checkbox für 'Eilig' hinzufügen und den Status speichern
+const toggleUrgent = async (orderId) => {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
 
-  const isUrgent = !order.isUrgent;  // Toggle der aktuellen Urgency
-  toggleUrgency(orderId, isUrgent);  // Aufruf der Funktion zur Statusaktualisierung
+  const updatedUrgent = !order.isUrgent; // Toggle 'Eilig' Status
+  try {
+    await updateDoc(doc(db, "orders", orderId), { isUrgent: updatedUrgent });
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isUrgent: updatedUrgent } : o));
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des 'Eilig'-Status:", error);
+  }
 };
-
   
 useEffect(() => {
     // Wenn es eine Suchabfrage gibt, setze showOrders auf true
@@ -343,18 +338,14 @@ const clearSearch = () => {
             ) : (
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
-          <div className="flex items-center">
-        <Checkbox 
-          checked={order.isUrgent || false} 
-          onChange={(e) => {
-            console.log('Checkbox geändert:', e.target.checked);
-            toggleUrgency(order.id, e.target.checked);
-          }} 
-          className="ml-2"
-        />
-        <span className="text-xs ml-1">Eilig</span>
-      </div>
-    </div>                   
+          <
+     <Checkbox 
+      checked={order.isUrgent || false} 
+      onChange={(e) => toggleUrgency(order.id, e.target.checked)} 
+      className="ml-2"
+    />
+    <span className="text-xs">Eilig</span>
+  </div>                   
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
   className={`
     ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
@@ -374,7 +365,9 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
-                          
+
+              
+              
            <div className="mt-4">   
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-20 text-xs" />
               </div>
