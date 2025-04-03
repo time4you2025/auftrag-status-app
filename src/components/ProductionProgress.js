@@ -338,8 +338,7 @@ const clearSearch = () => {
             ) : (
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
-          <
-     <Checkbox 
+          <Checkbox 
       checked={order.isUrgent || false} 
       onChange={(e) => toggleUrgency(order.id, e.target.checked)} 
       className="ml-2"
