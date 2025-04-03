@@ -19,15 +19,10 @@ function getCurrentCalendarWeek() {
 }
 
 function getStatusColor(order) {
+  if (order.progress.every(step => step)) return "bg-green-500";
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
-  
- if (diff > 0) {
-    return "border-2 border-red-500"; // Roter Rahmen für verspätete Aufträge
-  }
 
-  // Status-Logik wie zuvor
-  if (order.progress.every(step => step)) return "bg-green-500";
   if (diff < -1) return "bg-green-500";
   if (diff === -1) return "bg-yellow-500";
   if (diff === 0) return "bg-orange-500";
@@ -321,7 +316,7 @@ const clearSearch = () => {
       </Button>
 
       {showOrders && SORTED_ORDERS.map((order) => (
-        <Card key={order.id} className={`p-2 my-2 ${getStatusColor(order)} relative`}>
+        <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
             {order.progress.every(step => step) ? (
@@ -343,7 +338,7 @@ const clearSearch = () => {
                 {step}
               {order.timestamps && order.timestamps[index] && (
                <span className="text-gray-500 text-xxs ml-2">
-                  {new Date(order.timestamps[index]).toLocaleDateString()}
+                  {new Date(order.timestamps[index]).toLocaleString()}
               </span>
               )}
               </label>
