@@ -326,7 +326,7 @@ const clearSearch = () => {
       </Button>
 
       {showOrders && SORTED_ORDERS.map((order) => (
-        <Card key={order.id} className="p-2 my-2">
+        <Card key={order.id} className={`p-2 my-2 ${getStatusColor(order)}`}>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
             {order.progress.every(step => step) ? (
