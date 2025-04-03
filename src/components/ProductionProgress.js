@@ -22,12 +22,7 @@ function getStatusColor(order) {
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
   
-  // Prüfe, ob der Auftrag verspätet ist
-  const dueDate = new Date(order.dueDate); // Angenommen, du hast ein `dueDate`-Feld
-  const isLate = dueDate < new Date(); // Wenn das Fälligkeitsdatum in der Vergangenheit liegt
-  
-  // Roter Punkt für verspätete Aufträge
-  if (isLate) {
+ if (diff > 0) {
     return "border-2 border-red-500"; // Roter Rahmen für verspätete Aufträge
   }
 
