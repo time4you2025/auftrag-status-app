@@ -63,6 +63,20 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
+// Checkbox für 'Eilig' hinzufügen und den Status speichern
+const toggleUrgent = async (orderId) => {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const updatedUrgent = !order.isUrgent; // Toggle 'Eilig' Status
+  try {
+    await updateDoc(doc(db, "orders", orderId), { isUrgent: updatedUrgent });
+    setOrders(prev => prev.map(o => o.id === orderId ? { ...o, isUrgent: updatedUrgent } : o));
+  } catch (error) {
+    console.error("Fehler beim Aktualisieren des 'Eilig'-Status:", error);
+  }
+};
+  
 useEffect(() => {
     // Wenn es eine Suchabfrage gibt, setze showOrders auf true
     if (searchQuery) {
@@ -344,6 +358,15 @@ const clearSearch = () => {
               </label>
             ))}
           </div>
+
+              <div className="mt-2 flex items-center gap-2">
+    <Checkbox 
+      checked={order.isUrgent || false} 
+      onChange={() => toggleUrgent(order.id)} 
+    />
+    <span className="text-xs">Eilig</span>
+  </div>
+              
            <div className="mt-4">   
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-20 text-xs" />
               </div>
