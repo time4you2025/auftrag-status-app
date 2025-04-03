@@ -338,7 +338,14 @@ const clearSearch = () => {
             ) : (
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
-          </div>
+          <
+     <Checkbox 
+      checked={order.isUrgent || false} 
+      onChange={(e) => toggleUrgency(order.id, e.target.checked)} 
+      className="ml-2"
+    />
+    <span className="text-xs">Eilig</span>
+  </div>                   
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
   className={`
     ${((order.progress.filter(Boolean).length / steps.length) * 100) === 100 ? "bg-green-500" : "bg-blue-500"}
@@ -359,13 +366,7 @@ const clearSearch = () => {
             ))}
           </div>
 
-              <div className="mt-2 flex items-center gap-2">
-    <Checkbox 
-      checked={order.isUrgent || false} 
-      onChange={() => toggleUrgent(order.id)} 
-    />
-    <span className="text-xs">Eilig</span>
-  </div>
+              
               
            <div className="mt-4">   
           <Input value={order.remark} onChange={(e) => updateRemark(order.id, e.target.value)} placeholder="Bemerkung" style="margin-top: 10px;" className="mt-20 text-xs" />
