@@ -210,10 +210,13 @@ const clearSearch = () => {
     if (!order || (index > 0 && !order.progress[index - 1])) return;
 
     const updatedProgress = [...order.progress];
-    updatedProgress[index] = !updatedProgress[index];
+  const updatedTimestamps = [...(order.timestamps || Array(steps.length).fill(null))];
+
+  updatedProgress[index] = !updatedProgress[index];
+  updatedTimestamps[index] = updatedProgress[index] ? new Date().toISOString() : null;
 
     try {
-      await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress });
+      await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress, timestamps: updatedTimestamps });
       setOrders(prev => prev.map(o => o.id === orderId ? { ...o, progress: updatedProgress } : o));
     } catch (error) {
       console.error("Fehler beim Aktualisieren des Status:", error);
@@ -333,6 +336,11 @@ const clearSearch = () => {
               <label key={index} className="flex items-center gap-1 text-xs">
                 <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
                 {step}
+              {order.timestamps && order.timestamps[index] && (
+               <span className="text-gray-500 text-xs ml-2">
+                  {new Date(order.timestamps[index]).toLocaleString()}
+              </span>
+              )}
               </label>
             ))}
           </div>
