@@ -338,7 +338,7 @@ const clearSearch = () => {
                 {step}
               {order.timestamps && order.timestamps[index] && (
                <span className="text-gray-500 text-xxs ml-2">
-                  {new Date(order.timestamps[index]).toLocaleString()}
+                  {new Date(order.timestamps[index]).toLocaleDateString()}
               </span>
               )}
               </label>
