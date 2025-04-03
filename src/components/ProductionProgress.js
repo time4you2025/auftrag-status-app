@@ -213,7 +213,7 @@ const clearSearch = () => {
   const updatedTimestamps = [...(order.timestamps || Array(steps.length).fill(null))];
 
   updatedProgress[index] = !updatedProgress[index];
-  updatedTimestamps[index] = updatedProgress[index] ? new Date().toISOString() : null;
+  updatedTimestamps[index] = updatedProgress[index] ? new Date().toLocalDateString() : null;
 
     try {
       await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress, timestamps: updatedTimestamps });
@@ -337,7 +337,7 @@ const clearSearch = () => {
                 <Checkbox checked={order.progress[index]} onChange={() => toggleStep(order.id, index)} />
                 {step}
               {order.timestamps && order.timestamps[index] && (
-               <span className="text-gray-500 text-xs ml-2">
+               <span className="text-gray-500 text-xxs ml-2">
                   {new Date(order.timestamps[index]).toLocaleString()}
               </span>
               )}
