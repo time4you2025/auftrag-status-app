@@ -19,10 +19,20 @@ function getCurrentCalendarWeek() {
 }
 
 function getStatusColor(order) {
-  if (order.progress.every(step => step)) return "bg-green-500";
   const currentWeek = getCurrentCalendarWeek();
   const diff = currentWeek - order.week;
+  
+  // Prüfe, ob der Auftrag verspätet ist
+  const dueDate = new Date(order.dueDate); // Angenommen, du hast ein `dueDate`-Feld
+  const isLate = dueDate < new Date(); // Wenn das Fälligkeitsdatum in der Vergangenheit liegt
+  
+  // Roter Punkt für verspätete Aufträge
+  if (isLate) {
+    return "border-2 border-red-500"; // Roter Rahmen für verspätete Aufträge
+  }
 
+  // Status-Logik wie zuvor
+  if (order.progress.every(step => step)) return "bg-green-500";
   if (diff < -1) return "bg-green-500";
   if (diff === -1) return "bg-yellow-500";
   if (diff === 0) return "bg-orange-500";
@@ -338,7 +348,7 @@ const clearSearch = () => {
                 {step}
               {order.timestamps && order.timestamps[index] && (
                <span className="text-gray-500 text-xxs ml-2">
-                  {new Date(order.timestamps[index]).toLocaleString()}
+                  {new Date(order.timestamps[index]).toLocaleDateString()}
               </span>
               )}
               </label>
