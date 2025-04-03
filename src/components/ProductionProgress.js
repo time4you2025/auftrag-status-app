@@ -340,7 +340,7 @@ const clearSearch = () => {
             )}
           <Checkbox 
       checked={order.isUrgent || false} 
-      onChange={(e) => toggleUrgency(order.id, e.target.checked)} 
+      onChange={(e) => toggleUrgent(order.id, e.target.checked)} 
       className="ml-2"
     />
     <span className="text-xs">Eilig</span>
