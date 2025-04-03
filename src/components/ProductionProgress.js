@@ -213,7 +213,7 @@ const clearSearch = () => {
   const updatedTimestamps = [...(order.timestamps || Array(steps.length).fill(null))];
 
   updatedProgress[index] = !updatedProgress[index];
-  updatedTimestamps[index] = updatedProgress[index] ? new Date().toLocalDateString() : null;
+  updatedTimestamps[index] = updatedProgress[index] ? new Date().toLocaleDateString() : null;
 
     try {
       await updateDoc(doc(db, "orders", orderId), { progress: updatedProgress, timestamps: updatedTimestamps });
