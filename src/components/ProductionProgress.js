@@ -42,7 +42,6 @@ export default function ProductionProgress() {
   const [isScannerVisible, setIsScannerVisible] = useState(false);
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
-  const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
   const [filter, setFilter] = useState("all"); // Filterzustand: "all", "urgent", "late"
 
   useEffect(() => {
@@ -74,7 +73,7 @@ export default function ProductionProgress() {
     if (searchQuery && order.id.includes(searchQuery)) {
       return true;
     }
-    return false; // Alle Aufträge anzeigen, wenn kein Filter angewendet wird
+    return filter === "all"; 
   });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
@@ -339,7 +338,7 @@ const clearSearch = () => {
       </div>
 
 
-      {showOrders && SORTED_ORDERS.map((order) => (
+      {SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-bold">{order.id} (KW {order.week})</h2>
