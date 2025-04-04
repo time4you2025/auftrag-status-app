@@ -66,6 +66,7 @@ export default function ProductionProgress() {
 
 // Filterlogik basierend auf dem ausgewählten Filter
   const filteredOrders = orders.filter(order => {
+    // Filter anwenden basierend auf der ausgewählten Filteroption
     if (filter === "urgent") {
       return order.isUrgent; // Nur eilige Aufträge
     }
@@ -73,8 +74,14 @@ export default function ProductionProgress() {
       const currentWeek = getCurrentCalendarWeek();
       return currentWeek - order.week > 0; // Nur verspätete Aufträge
     }
-    return true; // Alle Aufträge anzeigen
+    // Filter für die Suchabfrage (optional)
+    if (searchQuery && order.id.includes(searchQuery)) {
+      return true;
+    }
+    return true; // Alle Aufträge anzeigen, wenn kein Filter angewendet wird
   });
+
+  const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   
 // Checkbox für 'Eilig' hinzufügen und den Status speichern
@@ -91,16 +98,7 @@ const toggleUrgent = async (orderId) => {
   }
 };
   
-useEffect(() => {
-    // Wenn es eine Suchabfrage gibt, setze showOrders auf true
-    if (searchQuery) {
-      setShowOrders(true);
-    } else {
-      setShowOrders(false);
-    }
-  }, [searchQuery]);
-
-  
+ 
  useEffect(() => {
     // HTML5-QR-Scanner initialisieren
   if (isScannerVisible) {
@@ -281,8 +279,7 @@ const clearSearch = () => {
     setShowPasswordPrompt(true);
   };
 
-  const filteredOrders = orders.filter(order => order.id.includes(searchQuery));
-  const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
+ const SORTED_ORDERS = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   return (
     <div className="p-2 bg-green-600 min-h-screen flex flex-col">
