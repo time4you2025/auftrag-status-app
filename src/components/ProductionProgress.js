@@ -61,24 +61,27 @@ export default function ProductionProgress() {
 
  // Filterlogik basierend auf dem ausgewählten Filter
  const filteredOrders = orders.filter(order => {
-  const matchesSearch = searchQuery === "" || order.id.toLowerCase().includes(searchQuery.toLowerCase());
+  const matchesSearch =
+    searchQuery === "" || order.id.toLowerCase().includes(searchQuery.toLowerCase());
 
   if (!matchesSearch) return false;
 
   const currentWeek = getCurrentCalendarWeek();
+  const isDone = order.progress && order.progress.every(step => step.done === true);
 
   switch (filter) {
     case "urgent":
       return order.isUrgent;
     case "late":
-      return currentWeek > order.week && order.status !== "Abgeschlossen";
+      return currentWeek > order.week && !isDone;
     case "done":
-      return order.status === "Abgeschlossen";
+      return isDone;
     case "all":
     default:
       return true;
   }
 });
+  
   const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   
@@ -334,7 +337,7 @@ const clearSearch = () => {
       )}
      
       {/* Filter-Buttons */}
-      <div className="flex justify-center mb-4 space-x-2">
+      <div className="flex justify-left mb-4 space-x-2">
   <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>Alle</Button>
   <Button variant={filter === "urgent" ? "default" : "outline"} onClick={() => setFilter("urgent")}>Eilig</Button>
   <Button variant={filter === "late" ? "default" : "outline"} onClick={() => setFilter("late")}>Verspätet</Button>
