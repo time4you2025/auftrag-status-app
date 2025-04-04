@@ -43,6 +43,7 @@ export default function ProductionProgress() {
   const [scannerActive, setScannerActive] = useState(false);
   const lastScannedOrderRef = useRef(null); // Speichert letzte Auftragsnummer für doppelten Scan-Schutz
   const [showOrders, setShowOrders] = useState(searchQuery !== ""); 
+  const [filter, setFilter] = useState("all"); // Filterzustand: "all", "urgent", "late"
 
   useEffect(() => {
     // Verwende onSnapshot, um Echtzeit-Updates zu erhalten
@@ -63,6 +64,19 @@ export default function ProductionProgress() {
     setShowOrders(prev => !prev);
   };
 
+// Filterlogik basierend auf dem ausgewählten Filter
+  const filteredOrders = orders.filter(order => {
+    if (filter === "urgent") {
+      return order.isUrgent; // Nur eilige Aufträge
+    }
+    if (filter === "late") {
+      const currentWeek = getCurrentCalendarWeek();
+      return currentWeek - order.week > 0; // Nur verspätete Aufträge
+    }
+    return true; // Alle Aufträge anzeigen
+  });
+
+  
 // Checkbox für 'Eilig' hinzufügen und den Status speichern
 const toggleUrgent = async (orderId) => {
   const order = orders.find(o => o.id === orderId);
@@ -328,6 +342,13 @@ const clearSearch = () => {
       <Button onClick={toggleOrdersVisibility} className="mb-4">
         {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
       </Button>
+      {/* Filter-Buttons */}
+      <div className="mb-2 flex gap-4">
+        <Button onClick={() => setFilter("all")}>Alle Aufträge</Button>
+        <Button onClick={() => setFilter("urgent")}>Eilige Aufträge</Button>
+        <Button onClick={() => setFilter("late")}>Verspätete Aufträge</Button>
+      </div>
+
 
       {showOrders && SORTED_ORDERS.map((order) => (
         <Card key={order.id} className="p-2 my-2">
