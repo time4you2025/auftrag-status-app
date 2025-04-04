@@ -65,15 +65,20 @@ export default function ProductionProgress() {
 
   if (!matchesSearch) return false;
 
-  if (filter === "urgent") return order.isUrgent;
-  if (filter === "late") {
-    const currentWeek = getCurrentCalendarWeek();
-    return currentWeek - order.week > 0;
+  const currentWeek = getCurrentCalendarWeek();
+
+  switch (filter) {
+    case "urgent":
+      return order.isUrgent;
+    case "late":
+      return currentWeek > order.week && order.status !== "Abgeschlossen";
+    case "done":
+      return order.status === "Abgeschlossen";
+    case "all":
+    default:
+      return true;
   }
-
-  return true; // Wenn Filter "all" ist
 });
-
   const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
   
@@ -329,11 +334,12 @@ const clearSearch = () => {
       )}
      
       {/* Filter-Buttons */}
-      <div className="mb-2 flex gap-4">
-        <Button onClick={() => setFilter("all")}>Alle Aufträge</Button>
-        <Button onClick={() => setFilter("urgent")}>Eilige Aufträge</Button>
-        <Button onClick={() => setFilter("late")}>Verspätete Aufträge</Button>
-      </div>
+      <div className="flex justify-center mb-4 space-x-2">
+  <Button variant={filter === "all" ? "default" : "outline"} onClick={() => setFilter("all")}>Alle</Button>
+  <Button variant={filter === "urgent" ? "default" : "outline"} onClick={() => setFilter("urgent")}>Eilig</Button>
+  <Button variant={filter === "late" ? "default" : "outline"} onClick={() => setFilter("late")}>Verspätet</Button>
+  <Button variant={filter === "done" ? "default" : "outline"} onClick={() => setFilter("done")}>Abgeschlossen</Button>
+</div>
 
 
       {SORTED_ORDERS.map((order) => (
