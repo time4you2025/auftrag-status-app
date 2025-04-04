@@ -330,11 +330,7 @@ const clearSearch = () => {
       {isScannerVisible && (
         <div id="qr-code-scanner" className="my-4"></div> // Hier das id-Attribut hinzufügen
       )}
-
-      {/* Button zum Auf- und Zuklappen der gesamten Auftragsliste */}
-      <Button onClick={toggleOrdersVisibility} className="mb-4">
-        {showOrders ? "Aufträge verbergen" : "Aufträge anzeigen"}
-      </Button>
+     
       {/* Filter-Buttons */}
       <div className="mb-2 flex gap-4">
         <Button onClick={() => setFilter("all")}>Alle Aufträge</Button>
