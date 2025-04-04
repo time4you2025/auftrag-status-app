@@ -60,21 +60,19 @@ export default function ProductionProgress() {
   }, []);
 
  // Filterlogik basierend auf dem ausgewählten Filter
-  const filteredOrders = orders.filter(order => {
-    // Filter anwenden basierend auf der ausgewählten Filteroption
-    if (filter === "urgent") {
-      return order.isUrgent; // Nur eilige Aufträge
-    }
-    if (filter === "late") {
-      const currentWeek = getCurrentCalendarWeek();
-      return currentWeek - order.week > 0; // Nur verspätete Aufträge
-    }
-    // Filter für die Suchabfrage (optional)
-    if (searchQuery && order.id.includes(searchQuery)) {
-      return true;
-    }
-    return filter === "all"; 
-  });
+ const filteredOrders = orders.filter(order => {
+  const matchesSearch = searchQuery === "" || order.id.toLowerCase().includes(searchQuery.toLowerCase());
+
+  if (!matchesSearch) return false;
+
+  if (filter === "urgent") return order.isUrgent;
+  if (filter === "late") {
+    const currentWeek = getCurrentCalendarWeek();
+    return currentWeek - order.week > 0;
+  }
+
+  return true; // Wenn Filter "all" ist
+});
 
   const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
 
