@@ -60,11 +60,7 @@ export default function ProductionProgress() {
     return () => unsubscribe();
   }, []);
 
-  const toggleOrdersVisibility = () => {
-    setShowOrders(prev => !prev);
-  };
-
-// Filterlogik basierend auf dem ausgewählten Filter
+ // Filterlogik basierend auf dem ausgewählten Filter
   const filteredOrders = orders.filter(order => {
     // Filter anwenden basierend auf der ausgewählten Filteroption
     if (filter === "urgent") {
@@ -78,7 +74,7 @@ export default function ProductionProgress() {
     if (searchQuery && order.id.includes(searchQuery)) {
       return true;
     }
-    return true; // Alle Aufträge anzeigen, wenn kein Filter angewendet wird
+    return false; // Alle Aufträge anzeigen, wenn kein Filter angewendet wird
   });
 
   const sortedOrders = [...filteredOrders].sort((a, b) => a.id.localeCompare(b.id, undefined, { numeric: true }));
