@@ -338,12 +338,14 @@ const clearSearch = () => {
             ) : (
               <div className={`w-4 h-4 rounded-full ${getStatusColor(order)}`} />
             )}
+           <div className="ml-auto flex items-center">
           <Checkbox 
       checked={order.isUrgent || false} 
       onChange={(e) => toggleUrgent(order.id, e.target.checked)} 
       className="ml-2"
     />
     <span className="text-xs">Eilig</span>
+                              </div>
   </div>                   
           <Progress value={(order.progress.filter(Boolean).length / steps.length) * 100}
   className={`
